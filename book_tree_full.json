@@ -1,6 +1,10 @@
 [
     {
         "name": "古今图书集成",
+        "writing_year": 1706,
+        "publication_year": 1728,
+        "type": "子",
+        "category": "类书类",
         "level": 0,
         "is_leaf": false,
         "children": [
@@ -1160,6 +1164,10 @@
     },
     {
         "name": "月令粹编",
+        "writing_year": 1812,
+        "publication_year": 1812,
+        "type": "史",
+        "category": "时令类",
         "level": 0,
         "is_leaf": false,
         "children": [
@@ -1429,6 +1437,10 @@
     },
     {
         "name": "东山草堂集",
+        "writing_year": 1739,
+        "publication_year": 1739,
+        "type": "集",
+        "category": "别集",
         "level": 0,
         "is_leaf": false,
         "children": [
@@ -1470,6 +1482,10 @@
     },
     {
         "name": "焦氏说楛",
+        "writing_year": 1593,
+        "publication_year": 1593,
+        "type": "子",
+        "category": "杂家类",
         "level": 0,
         "is_leaf": false,
         "children": [
@@ -1511,6 +1527,10 @@
     },
     {
         "name": "珂雪斋集",
+        "writing_year": null,
+        "publication_year": 1618,
+        "type": null,
+        "category": null,
         "level": 0,
         "is_leaf": false,
         "children": [
@@ -1552,6 +1572,10 @@
     },
     {
         "name": "记纂渊海",
+        "writing_year": 1209,
+        "publication_year": null,
+        "type": "子",
+        "category": "类书类",
         "level": 0,
         "is_leaf": false,
         "children": [
@@ -1593,6 +1617,10 @@
     },
     {
         "name": "吹网录",
+        "writing_year": 1859,
+        "publication_year": 1869,
+        "type": "子",
+        "category": "杂家类",
         "level": 0,
         "is_leaf": false,
         "children": [
@@ -1674,6 +1702,10 @@
     },
     {
         "name": "天下郡国利病书",
+        "writing_year": 1639,
+        "publication_year": 1879,
+        "type": "史",
+        "category": null,
         "level": 0,
         "is_leaf": false,
         "children": [
@@ -1735,6 +1767,10 @@
     },
     {
         "name": "缘督庐日记抄",
+        "writing_year": 1879,
+        "publication_year": 1933,
+        "type": "史",
+        "category": "传记类",
         "level": 0,
         "is_leaf": false,
         "children": [
@@ -1776,6 +1812,10 @@
     },
     {
         "name": "宾退录",
+        "writing_year": 1224,
+        "publication_year": 1780,
+        "type": "子",
+        "category": "杂家类",
         "level": 0,
         "is_leaf": false,
         "children": [
@@ -1817,6 +1857,10 @@
     },
     {
         "name": "宝真斋法书赞",
+        "writing_year": 1225,
+        "publication_year": 1784,
+        "type": "子",
+        "category": "艺术类",
         "level": 0,
         "is_leaf": false,
         "children": [
@@ -1858,6 +1902,10 @@
     },
     {
         "name": "方舆胜览",
+        "writing_year": 1238,
+        "publication_year": 1778,
+        "type": "史",
+        "category": "地理类",
         "level": 0,
         "is_leaf": false,
         "children": [
@@ -1899,6 +1947,10 @@
     },
     {
         "name": "古今合璧事类备要",
+        "writing_year": 1257,
+        "publication_year": 1781,
+        "type": "子",
+        "category": "类书类",
         "level": 0,
         "is_leaf": false,
         "children": [
@@ -1940,6 +1992,10 @@
     },
     {
         "name": "仕学规范",
+        "writing_year": 1176,
+        "publication_year": 1776,
+        "type": "子",
+        "category": "杂家类",
         "level": 0,
         "is_leaf": false,
         "children": [
@@ -2032,6 +2088,10 @@
     },
     {
         "name": "晦庵先生朱文公文集",
+        "writing_year": 1130,
+        "publication_year": 1934,
+        "type": "集",
+        "category": "别集类",
         "level": 0,
         "is_leaf": false,
         "children": [
@@ -2331,6 +2391,10 @@
     },
     {
         "name": "新雕皇朝类苑",
+        "writing_year": 1145,
+        "publication_year": 1621,
+        "type": "子",
+        "category": "杂家类",
         "level": 0,
         "is_leaf": false,
         "children": [
@@ -4343,6 +4407,10 @@
     },
     {
         "name": "日下旧闻",
+        "writing_year": 1687,
+        "publication_year": 1688,
+        "type": "史",
+        "category": "地理类",
         "level": 0,
         "is_leaf": false,
         "children": [
@@ -4465,6 +4533,10 @@
     },
     {
         "name": "千山志",
+        "writing_year": 1786,
+        "publication_year": null,
+        "type": "史",
+        "category": "地理类",
         "level": 0,
         "is_leaf": false,
         "children": [
@@ -4506,6 +4578,10 @@
     },
     {
         "name": "钝翁前后类稿",
+        "writing_year": 1675,
+        "publication_year": null,
+        "type": "集",
+        "category": "别集",
         "level": 0,
         "is_leaf": false,
         "children": [
@@ -4567,6 +4643,10 @@
     },
     {
         "name": "九州山水考",
+        "writing_year": 1662,
+        "publication_year": null,
+        "type": "经",
+        "category": null,
         "level": 0,
         "is_leaf": false,
         "children": [
@@ -4608,6 +4688,10 @@
     },
     {
         "name": "治河前策后策",
+        "writing_year": 1742,
+        "publication_year": null,
+        "type": "史",
+        "category": "地理类",
         "level": 0,
         "is_leaf": false,
         "children": [
@@ -4649,6 +4733,10 @@
     },
     {
         "name": "神农本草经赞",
+        "writing_year": 1850,
+        "publication_year": 1850,
+        "type": "子",
+        "category": "医家类",
         "level": 0,
         "is_leaf": false,
         "children": [
@@ -4790,6 +4878,10 @@
     },
     {
         "name": "曹集考异",
+        "writing_year": 1853,
+        "publication_year": 1914,
+        "type": "集",
+        "category": "别集类",
         "level": 0,
         "is_leaf": false,
         "children": [
@@ -4831,6 +4923,10 @@
     },
     {
         "name": "龙龛手鉴",
+        "writing_year": 997,
+        "publication_year": 1934,
+        "type": "经",
+        "category": "小学类",
         "level": 0,
         "is_leaf": false,
         "children": [
@@ -4872,6 +4968,10 @@
     },
     {
         "name": "恒山志",
+        "writing_year": 1768,
+        "publication_year": 1819,
+        "type": "史",
+        "category": "地理类",
         "level": 0,
         "is_leaf": false,
         "children": [
