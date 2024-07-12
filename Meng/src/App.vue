@@ -9,9 +9,10 @@
 
 
 <script>
-import MainView from './components/MainView.vue';
+// import MainView from './components/MainView.vue';
 import * as d3 from 'd3';
-import book_data from '@/assets/book_tree.json';
+import book_data from '@/assets/book_tree_full.json';
+// import book_data from '@/assets/book_tree.json';
 import meng_data from '@/assets/meng.json';
 import packedSquare from "@/js/packedSquare"
 
@@ -25,28 +26,34 @@ export default{
         // MainView: MainView
     },
     methods:{
+        hierarchical_packing(tree_data){
+
+        },
         init(){
-            // console.log(meng_data);
-            const svg = d3.select("#canvas");
             const totalWidth = this.$refs['main'].offsetWidth;
             const totalHeight = this.$refs['main'].offsetHeight;
+            const book2date = Object.fromEntries(new Map(book_data.map(d=>[d.name, d.writing_year])));
+            const Years = Object.values(book2date)
+            const timeScale = d3.scaleLinear().domain([d3.min(Years),d3.max(Years)]).range([100,totalHeight - 300])
+            const svg = d3.select("#canvas");
             const meng_root = d3.hierarchy(meng_data).sum(d=>d.is_leaf? 1: 0);
-            console.log(meng_root)
             const partition = packedSquare()
                             .size([totalWidth -10, 100])
                             .padding(5);
             const root = partition(meng_root);
 
-            const color = d3.scaleOrdinal()
-                        .domain(meng_root.leaves().map(d=>d.data.name))
-                        .range(d3.schemeSpectral[10])
-                        .unknown("#ccc");
+            // const color = d3.scaleOrdinal()
+            //             .domain(meng_root.leaves().map(d=>d.data.name))
+            //             .range(d3.schemeSpectral[10])
+            //             .unknown("#ccc");
 
-            const cell = svg
-                        .selectAll()
-                        .data(root.descendants())
-                        .join("g")
-                        .attr("transform", d => `translate(${d.x0},${d.y0})`);
+            const cell = svg.append('g')
+                            .attr('class',"meng")
+                            .attr("transform",`translate(0, ${totalHeight - 150})`)
+                            .selectAll('g')
+                            .data(root.descendants())
+                            .join("g")
+                            .attr("transform", d => `translate(${d.x0},${d.y0})`);
 
             cell.append("rect")
                 .attr("width", d => d.x1 - d.x0)
@@ -71,12 +78,40 @@ export default{
             //     .attr("width", d => totalWidth * (d.value / meng_root.value))
             //     .attr("height", 100)
             //     .attr('fill', d=>color(d.name));
-            // for(const content of book_data){
-            //     const h_book = d3.hierarchy(book);
-            //     h_book.sum(d=>d.is_leaf ? 1 : 0);
-            //     console.log(h_book);
-            //     break;
-            // }
+
+            const h_books = book_data.map(book => d3.hierarchy(book).sum(d=> d.is_leaf ? d.value.length : 0));
+            const real_w_calculator = function(h_books){
+                const all_values = h_books.map(d=>d.value);
+                return function(value){
+                    return value / d3.max(all_values) *totalWidth;
+                }
+            }(h_books)
+
+            console.log('calculate', real_w_calculator(40))
+
+            for(const h_book of h_books){
+                const partition = packedSquare()
+                                .size([real_w_calculator(h_book.value), 100])
+                                .padding(5);
+                const root = partition(h_book);
+
+                const cell = svg
+                            .append('g')
+                            .attr('class',`${h_book.data.name}`)
+                            .attr("transform", `translate(0, ${timeScale(book2date[h_book.data.name])})`)
+                            .selectAll('g')
+                            .data(root.descendants())
+                            .join("g")
+                            .attr("transform", d => `translate(${d.x0},${d.y0})`);
+
+                cell.append("rect")
+                    .attr("width", d => d.x1 - d.x0)
+                    .attr("height", d => d.y1 - d.y0)
+                    .attr("fill", "none")
+                    .attr("stroke", "black")
+                    .attr("stroke-width", "1px")
+                    .attr("opacity", d=>d.depth != 1 ? "0" : "1")
+            }
         },
         test(){
             const width = 500;
