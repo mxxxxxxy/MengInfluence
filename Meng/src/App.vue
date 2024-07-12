@@ -15,6 +15,7 @@ import book_data from '@/assets/book_tree_full.json';
 // import book_data from '@/assets/book_tree.json';
 import meng_data from '@/assets/meng.json';
 import packedSquare from "@/js/packedSquare"
+import { getRandomNumber } from '@/js/utils'
 
 export default{
     data() {
@@ -67,8 +68,7 @@ export default{
                 // });
                 .attr("stroke", "black")
                 .attr("stroke-width", "1px")
-                .attr("opacity", d=>d.depth == 1 ? "0.2" : "1")
-                // .attr("fill", null);
+                .attr("opacity", d=>d.depth == 1 ? "0.2" : "1");
 
             // svg.selectAll(".meng")
             //     .data(level1_meng)
@@ -78,7 +78,7 @@ export default{
             //     .attr("width", d => totalWidth * (d.value / meng_root.value))
             //     .attr("height", 100)
             //     .attr('fill', d=>color(d.name));
-
+                    
             const h_books = book_data.map(book => d3.hierarchy(book).sum(d=> d.is_leaf ? d.value.length : 0));
             const real_w_calculator = function(h_books){
                 const all_values = h_books.map(d=>d.value);
@@ -88,29 +88,36 @@ export default{
             }(h_books)
 
             console.log('calculate', real_w_calculator(40))
-
+            let i = 0
             for(const h_book of h_books){
+                const real_w = real_w_calculator(h_book.value)
                 const partition = packedSquare()
-                                .size([real_w_calculator(h_book.value), 100])
+                                .size([real_w, 30])
+                                // .size([totalWidth - 10, 30])
                                 .padding(5);
                 const root = partition(h_book);
-
+                const start_x = getRandomNumber(0, totalWidth - 10 - real_w)
                 const cell = svg
-                            .append('g')
-                            .attr('class',`${h_book.data.name}`)
-                            .attr("transform", `translate(0, ${timeScale(book2date[h_book.data.name])})`)
-                            .selectAll('g')
-                            .data(root.descendants())
-                            .join("g")
-                            .attr("transform", d => `translate(${d.x0},${d.y0})`);
-
+                                .append('g')
+                                .attr('class',`${h_book.data.name}`)
+                                // .attr("transform", `translate(0, ${timeScale(book2date[h_book.data.name])})`)
+                                .attr("transform", `translate(${start_x}, ${32 * i})`)
+                                .selectAll('g')
+                                .data(root.descendants())
+                                .join("g")
+                                .attr("transform", d => `translate(${d.x0},${d.y0})`);
+                console.log(i)
                 cell.append("rect")
                     .attr("width", d => d.x1 - d.x0)
                     .attr("height", d => d.y1 - d.y0)
                     .attr("fill", "none")
                     .attr("stroke", "black")
                     .attr("stroke-width", "1px")
-                    .attr("opacity", d=>d.depth != 1 ? "0" : "1")
+                    // .attr("opacity", d=>d.depth == 0 || d.depth == 1 ? "0" : "1")
+                    .attr("opacity", d=>d.depth == 0  ? "0" : "1")
+                    // .attr("opacity", d => ` ${1 - d.depth * 0.4}`)
+                // break;
+                i += 1;
             }
         },
         test(){
