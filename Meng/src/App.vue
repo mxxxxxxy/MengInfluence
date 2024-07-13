@@ -119,6 +119,115 @@ export default{
                 // break;
                 i += 1;
             }
+
+            // tt
+            // 三级的对应关系：引文相同
+            let links_3 = [];
+            // 遍历meng_data和book_data，找到相同的引文
+            for (const meng of meng_data.children) {
+                for (const meng_child of meng.children) {
+                    for (const meng_grandchild of meng_child.children) {
+                        if (meng_grandchild.level === 3) {
+                            for (const book of book_data) {
+                                for (const book_child of book.children) {
+                                    for (const book_grandchild of book_child.children) {
+                                        for (const book_grandgrandchild of book_grandchild.children) {
+                                            const quote = book_grandgrandchild.value[0]["引文"]
+                                            if (meng_grandchild.text == quote) {
+                                                // 如果找到相同的引文，创建一个新的流
+                                                links_3.push({
+                                                    source: meng_grandchild,
+                                                    target: {
+                                                        value: book_grandgrandchild,
+                                                        name_3: book_grandgrandchild.name,
+                                                        name_0: book.name,  // 零级信息
+                                                        name_1: book_child.name,  // 一级信息
+                                                        name_2: book_grandchild.name,  // 二级信息
+                                                    }
+                                                });
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            console.log(links_3);
+
+
+            // 二级的对应关系：所有connect_2相同的source + 所有name_2相同的target
+            let groupedSources_2 = {};
+            // 遍历links_3数组
+            for (let link of links_3) {
+                // 获取source节点的connect_2值
+                let key = link.source.connect_2;
+
+                // 如果这个connect_2值之前没有被使用过，那么初始化它的值为一个空对象
+                if (!groupedSources_2[key]) {
+                    groupedSources_2[key] = {};
+                }
+
+                // 获取target节点的name_0, name_1和name_2值
+                let targetKey = link.target.name_0 + '/' +
+                                link.target.name_1 + '/' +
+                                link.target.name_2;
+
+                // 如果这个name_2值之前没有被使用过，那么初始化它的值为一个空数组
+                if (!groupedSources_2[key][targetKey]) {
+                    groupedSources_2[key][targetKey] = [];
+                }
+
+                // 将target节点添加到对应的数组中
+                groupedSources_2[key][targetKey].push(link.target);
+            }
+            console.log(groupedSources_2);
+
+
+            // 一级的对应关系：
+            let groupedSources_3 = {};
+            // 遍历links_3数组
+            for (let link of links_3) {
+                // 获取source节点的connect_2值
+                let key = link.source.connect_1;
+
+                // 如果这个connect_2值之前没有被使用过，那么初始化它的值为一个空对象
+                if (!groupedSources_3[key]) {
+                    groupedSources_3[key] = {};
+                }
+
+                // 获取target节点的name_2值
+                let targetKey = link.target.name_0 + '/' +
+                                link.target.name_1
+
+                // 如果这个name_2值之前没有被使用过，那么初始化它的值为一个空数组
+                if (!groupedSources_3[key][targetKey]) {
+                    groupedSources_3[key][targetKey] = [];
+                }
+
+                // 将target节点添加到对应的数组中
+                groupedSources_3[key][targetKey].push(link.target);
+            }
+            console.log(groupedSources_3);
+
+
+            // 数据存好了（没穷尽，数不清），流还没画
+            // // 使用d3.linkHorizontal()来创建流
+            // const link = d3.linkHorizontal()
+            //     .x(d => d.x)
+            //     .y(d => d.y);
+
+            // // 在SVG中添加路径元素来表示流
+            // svg.selectAll(".link")
+            //     .data(links_3)
+            //     .enter()
+            //     .append("path")
+            //     .attr("class", "link")
+            //     .attr("d", link)
+            //     .attr("fill", "none")
+            //     .attr("stroke", "blue");  // 设置流的颜色
+            // tt
         },
         test(){
             const width = 500;
