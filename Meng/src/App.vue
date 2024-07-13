@@ -186,15 +186,15 @@ export default{
 
 
             // 一级的对应关系：
-            let groupedSources_3 = {};
+            let groupedSources_1 = {};
             // 遍历links_3数组
             for (let link of links_3) {
                 // 获取source节点的connect_2值
                 let key = link.source.connect_1;
 
                 // 如果这个connect_2值之前没有被使用过，那么初始化它的值为一个空对象
-                if (!groupedSources_3[key]) {
-                    groupedSources_3[key] = {};
+                if (!groupedSources_1[key]) {
+                    groupedSources_1[key] = {};
                 }
 
                 // 获取target节点的name_2值
@@ -202,14 +202,14 @@ export default{
                                 link.target.name_1
 
                 // 如果这个name_2值之前没有被使用过，那么初始化它的值为一个空数组
-                if (!groupedSources_3[key][targetKey]) {
-                    groupedSources_3[key][targetKey] = [];
+                if (!groupedSources_1[key][targetKey]) {
+                    groupedSources_1[key][targetKey] = [];
                 }
 
                 // 将target节点添加到对应的数组中
-                groupedSources_3[key][targetKey].push(link.target);
+                groupedSources_1[key][targetKey].push(link.target);
             }
-            console.log(groupedSources_3);
+            console.log(groupedSources_1);
 
 
             // 数据存好了（没穷尽，数不清），流还没画
