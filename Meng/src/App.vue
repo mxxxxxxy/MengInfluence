@@ -13,7 +13,7 @@
 import * as d3 from 'd3';
 import book_data from '@/assets/book_tree_full.json';
 // import book_data from '@/assets/book_tree.json';
-import meng_data from '@/assets/meng.json';
+import meng_data from '@/assets/meng_full.json';
 import packedSquare from "@/js/packedSquare"
 import { getRandomNumber } from '@/js/utils'
 
@@ -68,7 +68,7 @@ export default{
                 // });
                 .attr("stroke", "black")
                 .attr("stroke-width", "1px")
-                .attr("opacity", d=>d.depth == 1 ? "0.2" : "1");
+                .attr("opacity", d=>d.depth == 1 ? "1" : "0.2");
 
             // svg.selectAll(".meng")
             //     .data(level1_meng)
@@ -114,7 +114,7 @@ export default{
                     .attr("stroke", "black")
                     .attr("stroke-width", "1px")
                     // .attr("opacity", d=>d.depth == 0 || d.depth == 1 ? "0" : "1")
-                    .attr("opacity", d=>d.depth == 0  ? "0" : "1")
+                    .attr("opacity", d=>d.depth == 0  ? "0.2" : "1")
                     // .attr("opacity", d => ` ${1 - d.depth * 0.4}`)
                 // break;
                 i += 1;
