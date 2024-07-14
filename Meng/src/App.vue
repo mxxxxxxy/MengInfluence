@@ -1,26 +1,29 @@
 <template>
     <header>《梦溪笔谈》影响可视化</header>
-    <div ref="main" id="main" style="width: 100%; height: 99%; overflow: scroll;">
-        <svg width="100%" height="100%">
-            <g id="canvas"></g>
-        </svg>
+    <div id="main" style="width: 100%; height: 99%; overflow: scroll; display:flex;">
+        <div ref="main" style="width: 90%; height: 100%;">
+            <svg width="100%" height="100%">
+                <g id="canvas"></g>
+            </svg>
+        </div>
+        <div style="width: 10%; height: 100%;">
+            <Timeline />
+        </div>
         <!-- <MainView></MainView> -->
     </div>
 </template>
 
 
 <script>
-// import MainView from './components/MainView.vue';
 import * as d3 from 'd3';
 import book_data from '@/assets/book_tree_full.json';
 // import book_data from '@/assets/book_tree.json';
 import meng_data from '@/assets/meng.json';
 import packedSquare from "@/js/packedSquare"
 import tree from "@/js/tree"
-import { getRandomNumber } from '@/js/utils'
+import { getRandomNumber, concatName } from '@/js/utils'
+import Timeline from './components/timeline.vue';
 var h_books = book_data.map(book => tree(book));
-// console.log(h_books[0])
-// console.log(h_books.map(b => b.get_cited_nodes_by_depth(3,0,"故事二")).flat())
 export default{
     data() {
         return {
@@ -29,8 +32,13 @@ export default{
             bottomHeightRatio: 0.1,
             book_height: 0,
             padding: 2,
-            current_depth: 0,
+            current_depth: 1,
+            meng_depth: 1,
+            selectedNodes: []
         }
+    },
+    components:{
+        Timeline: Timeline
     },
     computed:{
         bottomHeight(){
@@ -42,9 +50,6 @@ export default{
         mainGTranslate(){
             return `translate(${this.padding, this.padding})`
         }
-    },
-    components:{
-        // MainView: MainView
     },
     methods:{
         assign_x_pos(children){
@@ -77,23 +82,28 @@ export default{
                             .attr("transform", d => `translate(${d.x0},${d.y0})`);
 
             cell.append("rect")
+                .attr("class", d=>`m${d.depth}`)
                 .attr("width", d => d.x1 - d.x0)
                 .attr("height", d => d.y1 - d.y0)
                 .attr("fill", "none")
                 .attr("stroke", "black")
                 .attr("stroke-width", "1px")
-                .attr("opacity", d=>d.depth == 1 ? "0.2" : "1");
+                .attr("opacity", d=>d.depth == 1 ? "0.2" : "1")
+                .attr('cursor', 'pointer')
+                .on("mouseover", (_e, d) => {
+                    if(d.depth === 0){
+                        return null;
+                    }
+                    const all_cited_nodes = h_books.map(b=>b.get_cited_nodes_by_depth(this.current_depth, d.depth, d.data.name)).flat();
+                    const all_names = all_cited_nodes.map(d=> concatName(d))
+                    this.selectedNodes = d3.selectAll(`.l${this.current_depth}`).filter( d => all_names.includes(concatName(d))).attr("fill", "red");
+                })
+                .on("mouseout", (_e, d) => {
+                    if(d.depth === 0) return null;
+                    this.selectedNodes.attr("fill", "none");
+                    this.selectedNodes = [];
+                })
 
-            // svg.selectAll(".meng")
-            //     .data(level1_meng)
-            //     .join("rect")
-            //     .attr("x", d => totalWidth * (d.value / meng_root.value))
-            //     .attr("y", 100)
-            //     .attr("width", d => totalWidth * (d.value / meng_root.value))
-            //     .attr("height", 100)
-            //     .attr('fill', d=>color(d.name));
-                    
-            // const h_books = book_data.map(book => d3.hierarchy(book).sum(d=> d.is_leaf ? d.value.length : 0));
             const real_w_calculator = (h_books) => {
                 const all_values = h_books.map(d=>d.value);
                 return (value) => {
@@ -127,10 +137,24 @@ export default{
                 .attr("stroke-width", "1px")
                 .attr("opacity", d=>d.depth == this.current_depth  ? "1" : "0.1")
                 .style("cursor", "pointer")
-                .on("click", (event, d) => {
-                    console.log(event.target, d)
+                .attr("class", (d, i)=>{
+                    return `l${d.data.level}`;
                 })
+                .on("mouseover", (event, d) => {
+                    this.selectedNodes = d3.selectAll(`.m${this.meng_depth}`)
+                    .filter(node=> d.cite[this.meng_depth].includes(node.data.name))
+                    .attr("fill","red");
+                    console.log(this.selectedNodes)
+                })
+                .on("mouseout", (event, d) => {
+                    this.selectedNodes.attr("fill", "none");
+                    this.selectedNodes = [];
+                })
+
         },
+        test(){
+            d3.select("#canvas").append("")
+        }
 
     },
     mounted(){
