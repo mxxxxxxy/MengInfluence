@@ -68,7 +68,11 @@ export default{
                 // });
                 .attr("stroke", "black")
                 .attr("stroke-width", "1px")
-                .attr("opacity", d=>d.depth == 1 ? "1" : "0.2");
+                .attr("opacity", d=>d.depth == 1 ? "1" : "0.2")
+                .attr("class", d => {
+                        // console.log(d.data.name);  // 打印d的值
+                        return `${d.data.name}`
+                    });
 
             // svg.selectAll(".meng")
             //     .data(level1_meng)
@@ -107,6 +111,21 @@ export default{
                                 .join("g")
                                 .attr("transform", d => `translate(${d.x0},${d.y0})`);
                 console.log(i)
+
+                // 添加每个方格的class 和下面的target key对应
+                function getClassName(d) {
+                    // 如果节点有父节点，那么类名应该包含父节点的名称
+                    if (d.parent) {
+                        let name = d.data.name ? d.data.name : "default";
+                        return getClassName(d.parent) + '-' + name;
+                    }
+                    // 否则，类名就是节点自己的名称，或者"default"如果名称为空
+                    else {
+                        return d.data.name ? d.data.name : "default";
+                    }
+                }
+
+
                 cell.append("rect")
                     .attr("width", d => d.x1 - d.x0)
                     .attr("height", d => d.y1 - d.y0)
@@ -116,13 +135,17 @@ export default{
                     // .attr("opacity", d=>d.depth == 0 || d.depth == 1 ? "0" : "1")
                     .attr("opacity", d=>d.depth == 0  ? "0.2" : "1")
                     // .attr("opacity", d => ` ${1 - d.depth * 0.4}`)
+                    .attr("class", d => {
+                        // console.log(d);  // 打印d的值
+                        return getClassName(d);  // 设置类名
+                    });
                 // break;
                 i += 1;
             }
 
             // tt
             // 三级的对应关系：引文相同
-            let links_3 = [];
+            const links_3 = [];
             // 遍历meng_data和book_data，找到相同的引文
             for (const meng of meng_data.children) {
                 for (const meng_child of meng.children) {
@@ -158,11 +181,11 @@ export default{
 
 
             // 二级的对应关系：所有connect_2相同的source + 所有name_2相同的target
-            let groupedSources_2 = {};
+            const groupedSources_2 = {};
             // 遍历links_3数组
-            for (let link of links_3) {
+            for (const link of links_3) {
                 // 获取source节点的connect_2值
-                let key = link.source.connect_2;
+                const key = link.source.connect_2;
 
                 // 如果这个connect_2值之前没有被使用过，那么初始化它的值为一个空对象
                 if (!groupedSources_2[key]) {
@@ -170,9 +193,11 @@ export default{
                 }
 
                 // 获取target节点的name_0, name_1和name_2值
-                let targetKey = link.target.name_0 + '/' +
-                                link.target.name_1 + '/' +
-                                link.target.name_2;
+                const name_0 = link.target.name_0 ? link.target.name_0 : "default";
+                const name_1 = link.target.name_1 ? link.target.name_1 : "default";
+                const name_2 = link.target.name_2 ? link.target.name_2 : "default";
+
+                const targetKey = name_0 + '-' + name_1 + '-' + name_2;
 
                 // 如果这个name_2值之前没有被使用过，那么初始化它的值为一个空数组
                 if (!groupedSources_2[key][targetKey]) {
@@ -185,12 +210,12 @@ export default{
             console.log(groupedSources_2);
 
 
-            // 一级的对应关系：
-            let groupedSources_1 = {};
+            // 一级的对应关系：所有connect_1相同的source + 所有name_1相同的target
+            const groupedSources_1 = {};
             // 遍历links_3数组
-            for (let link of links_3) {
+            for (const link of links_3) {
                 // 获取source节点的connect_2值
-                let key = link.source.connect_1;
+                const key = link.source.connect_1;
 
                 // 如果这个connect_2值之前没有被使用过，那么初始化它的值为一个空对象
                 if (!groupedSources_1[key]) {
@@ -198,8 +223,9 @@ export default{
                 }
 
                 // 获取target节点的name_2值
-                let targetKey = link.target.name_0 + '/' +
-                                link.target.name_1
+                const name_0 = link.target.name_0 ? link.target.name_0 : "default";
+                const name_1 = link.target.name_1 ? link.target.name_1 : "default";
+                const targetKey = name_0 + '-' + name_1;
 
                 // 如果这个name_2值之前没有被使用过，那么初始化它的值为一个空数组
                 if (!groupedSources_1[key][targetKey]) {
@@ -212,21 +238,43 @@ export default{
             console.log(groupedSources_1);
 
 
-            // 数据存好了（没穷尽，数不清），流还没画
-            // // 使用d3.linkHorizontal()来创建流
-            // const link = d3.linkHorizontal()
-            //     .x(d => d.x)
-            //     .y(d => d.y);
+            // 尝试根据class匹配rect
+            const className = "新雕皇朝类苑-default-风俗杂志-西域山水";  // 你要查找的类名
+            const gElement = d3.select(`.${className}`);  // 选择具有该类名的g元素
+            console.log(gElement)
 
-            // // 在SVG中添加路径元素来表示流
-            // svg.selectAll(".link")
-            //     .data(links_3)
-            //     .enter()
-            //     .append("path")
-            //     .attr("class", "link")
-            //     .attr("d", link)
-            //     .attr("fill", "none")
-            //     .attr("stroke", "blue");  // 设置流的颜色
+
+            // 创建一个linkHorizontal生成器
+            const link_1 = d3.linkHorizontal()
+                .source(d => [d.source.x1, d.source.y1])  // 使用x1和y1作为源节点的位置
+                .target(d => [d.target.x1, d.target.y1]);  // 使用x1和y1作为目标节点的位置
+
+            // 遍历groupedSources_1
+            for (const sourceKey in groupedSources_1) {
+                for (const targetKey in groupedSources_1[sourceKey]) {
+                    for (const target of groupedSources_1[sourceKey][targetKey]) {
+                        // 获取源节点和目标节点
+                        const sourceNode = d3.select(document.querySelector(`.${sourceKey}`));
+                        const targetNode = d3.select(document.querySelector(`.${targetKey}`));
+
+                        const source_pos = sourceNode.node().__data__;
+                        const target_pos = targetNode.node().__data__;
+
+                        // 创建一个路径数据对象
+                        const pathData = {
+                            source: source_pos,
+                            target: target_pos
+                        };
+
+                        // 添加路径元素
+                        svg.append("path")
+                            .attr("d", link_1(pathData))
+                            .attr("fill", "none")
+                            .attr("stroke", "rgba(0,0,0,0)");
+                    }
+                }
+            }
+            // 现在获取到的位置是不对的 好像是transform前的？
             // tt
         },
         test(){
