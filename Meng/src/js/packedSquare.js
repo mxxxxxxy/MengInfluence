@@ -1,16 +1,3 @@
-
-// var test = {
-//     value: 1,
-//     children:[
-//         {value: 1},
-//         {value: 1},
-//         {value: 1},
-//         {value: 1}
-//     ]
-// }
-// Dice(test, 0, 0, 100, 100);
-// console.log("test!!!!!!",test)
-
 export default function() {
   var dx = 1,
       dy = 1,
