@@ -1,13 +1,16 @@
 <template>
-    <header>《梦溪笔谈》影响可视化</header>
+    <!-- <header>《梦溪笔谈》影响可视化</header> -->
     <div id="main" style="width: 100%; height: 99%; overflow: scroll; display:flex;">
         <div ref="main" style="width: 90%; height: 100%;">
             <svg width="100%" height="100%">
                 <g id="canvas"></g>
             </svg>
         </div>
-        <div style="width: 10%; height: 100%;">
-            <Timeline />
+        <div style="width: 5%; height: 100%;">
+            <Timeline @book-hover="highlightBook" @book-unhover="unhighlightBook" />
+        </div>
+        <div style="width: 5%; height: 100%;">
+            <Title />
         </div>
         <!-- <MainView></MainView> -->
     </div>
@@ -23,7 +26,8 @@ import packedSquare from "@/js/packedSquare"
 import tree from "@/js/tree"
 import { getRandomNumber, concatName } from '@/js/utils'
 import Timeline from './components/timeline.vue';
-var h_books = book_data.map(book => tree(book));
+import Title from './components/title.vue';
+// var h_books = book_data.map(book => tree(book));
 export default{
     data() {
         return {
@@ -38,7 +42,8 @@ export default{
         }
     },
     components:{
-        Timeline: Timeline
+        Timeline: Timeline,
+        Title: Title
     },
     computed:{
         bottomHeight(){
@@ -61,7 +66,19 @@ export default{
             return 
 
         },
+        highlightBook(bookName) {
+            // 高亮显示名为 bookName 的书籍
+            const book = d3.select(`.${bookName.replace(/\s+/g, '-')}`);
+            book.select("rect").style("fill", "red");
+        },
+        unhighlightBook(bookName) {
+            // 取消高亮显示名为 bookName 的书籍
+            const book = d3.select(`.${bookName}`);
+            book.select("rect").style("fill", "none");
+        },
         init(){
+            book_data.sort((a, b) => b.writing_year - a.writing_year);
+            var h_books = book_data.map(book => tree(book));
             const book2date = Object.fromEntries(new Map(book_data.map(d=>[d.name, d.writing_year])));
             const Years = Object.values(book2date)
             const timeScale = d3.scaleLinear().domain([d3.min(Years),d3.max(Years)]).range([100, this.upperHeight])

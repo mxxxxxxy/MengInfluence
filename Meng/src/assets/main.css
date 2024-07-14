@@ -7,3 +7,11 @@
     font-weight: normal;
     height: 100vh;
   }
+  @font-face {
+    font-family: 'FangSong';
+    src: url('~@/assets/fonts/MyCustomFont.ttf') format('truetype');
+}
+  body {
+    background-color: #F7F7F7;  /* #F7F4F2  #F7F7F7  #E8E8E8 */
+    font-family: 'FangSong', sans-serif; 
+}
