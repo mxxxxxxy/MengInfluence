@@ -19,7 +19,7 @@ import packedSquare from "@/js/packedSquare"
 import tree from "@/js/tree"
 import { getRandomNumber } from '@/js/utils'
 var h_books = book_data.map(book => tree(book));
-// console.log(h_books[0].data.name)
+// console.log(h_books[0])
 // console.log(h_books.map(b => b.get_cited_nodes_by_depth(3,0,"故事二")).flat())
 export default{
     data() {
