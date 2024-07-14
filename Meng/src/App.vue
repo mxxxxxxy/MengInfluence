@@ -18,7 +18,7 @@
 import * as d3 from 'd3';
 import book_data from '@/assets/book_tree_full.json';
 // import book_data from '@/assets/book_tree.json';
-import meng_data from '@/assets/meng.json';
+import meng_data from '@/assets/meng_full.json';
 import packedSquare from "@/js/packedSquare"
 import tree from "@/js/tree"
 import { getRandomNumber, concatName } from '@/js/utils'
