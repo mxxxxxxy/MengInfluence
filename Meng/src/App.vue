@@ -246,8 +246,8 @@ export default{
 
             // 创建一个linkHorizontal生成器
             const link_1 = d3.linkHorizontal()
-                .source(d => [d.source.x1, d.source.y1])  // 使用x1和y1作为源节点的位置
-                .target(d => [d.target.x1, d.target.y1]);  // 使用x1和y1作为目标节点的位置
+                .source(d => [d.source.x, d.source.y])  // 使用x1和y1作为源节点的位置
+                .target(d => [d.target.x, d.target.y]);  // 使用x1和y1作为目标节点的位置
 
             // 遍历groupedSources_1
             for (const sourceKey in groupedSources_1) {
@@ -256,9 +256,10 @@ export default{
                         // 获取源节点和目标节点
                         const sourceNode = d3.select(document.querySelector(`.${sourceKey}`));
                         const targetNode = d3.select(document.querySelector(`.${targetKey}`));
+                        console.log(sourceNode.node().getBoundingClientRect().x)
 
-                        const source_pos = sourceNode.node().__data__;
-                        const target_pos = targetNode.node().__data__;
+                        const source_pos = sourceNode.node().getBoundingClientRect();
+                        const target_pos = targetNode.node().getBoundingClientRect();
 
                         // 创建一个路径数据对象
                         const pathData = {
@@ -270,7 +271,7 @@ export default{
                         svg.append("path")
                             .attr("d", link_1(pathData))
                             .attr("fill", "none")
-                            .attr("stroke", "rgba(0,0,0,0)");
+                            .attr("stroke", "rgba(0,0,0,1)");
                     }
                 }
             }
