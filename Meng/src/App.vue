@@ -3,6 +3,7 @@
         <div @click="this.cite_depth = 0" style="width: 20px; height: 20px; cursor: pointer; margin-right: 5px;">0</div>
         <div @click="this.cite_depth = 1" style="width: 20px; height: 20px; cursor: pointer;margin-right: 5px;">1</div>
         <div @click="this.cite_depth = 2" style="width: 20px; height: 20px; cursor: pointer;margin-right: 5px;">2</div>
+        <div @click="this.cite_depth = 3" style="width: 20px; height: 20px; cursor: pointer;margin-right: 5px;">3</div>
         <div @click="this.showNextLevel = false" style="width: 20px; height: 20px; cursor: pointer;margin-right: 5px;">F</div>
         <div @click="this.showNextLevel = true" style="width: 20px; height: 20px; cursor: pointer;margin-right: 5px;">T</div>
     </header>
@@ -40,7 +41,7 @@ export default{
             bottomHeightRatio: 0.1,
             book_height: 0,
             padding: 2,
-            cite_depth: 1,
+            cite_depth: 3,
             meng_depth: 1,
             selectedNodes: [],
             showNextLevel: false,
@@ -203,7 +204,7 @@ export default{
                                                     .size([this.lengthCal(node.value), 30]) // [width, height]
                                                     .padding(2);
                                     const root = assign_position(node);
-                                    return [root, ...root.children];
+                                    return root.children ? [root, ...root.children] : [root];
                                 })
                                 .join("g")
                                 .attr("transform", d => `translate(${d.x0},${d.y0})`);
@@ -216,8 +217,7 @@ export default{
                     .attr("font-size", d => d.depth === this.cite_depth ? "10" : "0")
             }
             this.openDetail = (event, d) => {
-                
-                console.log(event, d, node)
+                console.log("openDetail")
             }
             this.addRect = (upperCell) => {
                 return upperCell.append("rect")
