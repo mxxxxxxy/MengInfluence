@@ -10,8 +10,11 @@
   @font-face {
     font-family: 'FangSong';
     src: url('~@/assets/fonts/MyCustomFont.ttf') format('truetype');
-}
+  }
   body {
-    background-color: #F7F7F7;  /* #F7F4F2  #F7F7F7  #E8E8E8 */
+    /* background-image: url('./images/background.png'); */
+    background-size: cover;  /* 覆盖整个容器 */
+    background-repeat: no-repeat;  /* 不重复 */
     font-family: 'FangSong', sans-serif; 
-}
+    background-color: #F7F7F7;
+  }

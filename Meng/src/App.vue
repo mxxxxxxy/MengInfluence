@@ -6,11 +6,11 @@
                 <g id="canvas"></g>
             </svg>
         </div>
-        <div style="width: 5%; height: 100%;">
+        <div style="width: 6%; height: 100%;">
             <Timeline @book-hover="highlightBook" @book-unhover="unhighlightBook" />
         </div>
-        <div style="width: 5%; height: 100%;">
-            <Title />
+        <div style="width: 4%; height: 100%;">
+            <Title @level-selected="updateLevel" @level-selected-meng="updateMengLevel"/>
         </div>
         <!-- <MainView></MainView> -->
     </div>
@@ -64,7 +64,6 @@ export default{
             meng_item = "故事二"
             level = 1;
             return 
-
         },
         highlightBook(bookName) {
             // 高亮显示名为 bookName 的书籍
@@ -75,6 +74,64 @@ export default{
             // 取消高亮显示名为 bookName 的书籍
             const book = d3.select(`.${bookName}`);
             book.select("rect").style("fill", "none");
+        },
+        updateLevel(level) {
+            // 清除之前的高亮效果
+            d3.selectAll('.l1, .l2, .l3').style('fill', 'none');
+            switch (level) {
+                case '类':
+                    this.current_depth = 1;
+                    d3.selectAll('.l1').style('fill', 'red');
+                    break;
+                case '卷':
+                    this.current_depth = 2;
+                    d3.selectAll('.l2').style('fill', 'red');
+                    break;
+                case '条':
+                    this.current_depth = 3;
+                    d3.selectAll('.l3').style('fill', 'red');
+                    break;
+            }
+            // 更新所有节点的颜色
+            // d3.selectAll('rect')
+            //     .attr("fill", d => this.current_depth === d.depth ? "red" : "none");
+        },
+        updateLevelMeng(level) {
+            // 清除之前的高亮效果
+            d3.selectAll('.l1, .l2, .l3').style('fill', 'none');
+            switch (level) {
+                case '类':
+                    this.current_depth = 1;
+                    d3.selectAll('.l1').style('fill', 'red');
+                    break;
+                case '卷':
+                    this.current_depth = 2;
+                    d3.selectAll('.l2').style('fill', 'red');
+                    break;
+                case '条':
+                    this.current_depth = 3;
+                    d3.selectAll('.l3').style('fill', 'red');
+                    break;
+            }
+            // 更新所有节点的颜色
+            // d3.selectAll('rect')
+            //     .attr("fill", d => this.current_depth === d.depth ? "red" : "none");
+        },
+        updateMengLevel(level) {
+            switch (level) {
+                case '类':
+                    this.meng_depth = 1;
+                    break;
+                case '卷':
+                    this.meng_depth = 2;
+                    break;
+                case '条':
+                    this.meng_depth = 3;
+                    break;
+            }
+            // 更新所有与 meng 相关的 rect 的颜色
+            d3.selectAll('.m1, .m2, .m3').style('fill', 'none');
+            d3.selectAll(`.m${this.meng_depth}`).style('fill', 'red');
         },
         init(){
             book_data.sort((a, b) => b.writing_year - a.writing_year);
