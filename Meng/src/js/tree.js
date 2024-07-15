@@ -2,9 +2,9 @@ import * as d3 from 'd3';
 import { concatName } from '@/js/utils'
 
 export default function(book){
-    var hier = d3.hierarchy(book).sum(d=> d.is_leaf ? 1 : 0);
-
-
+    var hier = new d3.hierarchy(book).sum(d=> d.is_leaf ? 1 : 0);
+    
+    // console.log(hier.__proto__)
     // 给引用梦溪笔谈的书加上引用的数据
     if(book.name !== "meng"){
         hier.each( n => n.cite = [[],[],[],[]])
@@ -39,18 +39,18 @@ export default function(book){
     }
 
     //获取某一层的节点
-    hier.get_nodes_by_depth = function(depth){
+    hier.__proto__.get_nodes_by_depth = function(depth){
         return this.descendants().filter(_ => _.depth == depth);
     }
 
     // 获取某一层cite了梦m_depth的query的节点
-    hier.get_cited_nodes_by_depth = function(depth, m_depth, query){
+    hier.__proto__.get_cited_nodes_by_depth = function(depth, m_depth, query){
         return this.descendants().filter(_ => _.depth == depth && _.cite[m_depth].includes(query));
     }
 
-    hier.find_node_and_get_first_descendants = function(_node){
+    hier.__proto__.find_node_and_get_first_descendants = function(_node){
         const found = this.find(node => concatName(node) === concatName(_node));
-        return [found, ...found.children]
+        return found.children ? [found, ...found.children] : [found]
     }
     
     return hier

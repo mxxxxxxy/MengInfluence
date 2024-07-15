@@ -30,13 +30,14 @@ import book_data from '@/assets/book_tree_full.json';
 import meng_data from '@/assets/meng_full_new.json';
 import packedSquare from "@/js/packedSquare"
 import tree from "@/js/tree"
-import { getRandomNumber, concatName } from '@/js/utils'
+import { getRandomNumber, concatName, count} from '@/js/utils'
 import Timeline from '@/components/timeline.vue';
 import transition from '@/js/transition.js'
 
-var t = d3.transition().duration(750);
 import Title from './components/title.vue';
-// var h_books = book_data.map(book => tree(book));
+
+var h_books = book_data.map(book => tree(book)).sort((a, b) => b.writing_year - a.writing_year);
+
 export default{
     data() {
         return {
@@ -45,7 +46,7 @@ export default{
             bottomHeightRatio: 0.1,
             book_height: 0,
             padding: 2,
-            cite_depth: 3,
+            cite_depth: 1,
             meng_depth: 1,
             selectedNodes: [],
             showNextLevel: false,
@@ -81,69 +82,65 @@ export default{
             const cell = meng_container.selectAll('g')
                             .data(root.find_node_and_get_first_descendants(root))
                             .join("g")
-                            .attr("transform", d => `translate(${d.x0},${d.y0})`);
-                            // .join(
-                            //     enter => enter
-                            //             .append("g")
-                            //             .attr("transform", d => `translate(${d.x0},${d.y0})`),
-                            //     update => update
-                            //             .attr("transform", d => `translate(${d.x0},${d.y0})`),
-                            //     exit => exit.remove()
-                            // );
-            const texts = cell.append("text")
-                .text(d=>d.data.name ? d.data.name : "空")
-                .attr("x", d => 1 )
-                .attr("y", d => 20 )
-                .attr("cursor", "default");
+                            .attr("transform", d => `translate(${d.x0},${d.y0})`)
+            const addMengTexts = (cell) =>{
+                    cell.append("text")
+                        .filter( d=> d.depth == this.meng_depth)
+                        .text(d=> d.data.name ? d.data.name : "空")
+                        .attr("x", d => 1 )
+                        .attr("y", d => 20 )
+                        .attr("cursor", "default");
+                }
 
             let focus = root;
             const clickMengEvent = (event, current_meng) => {
                     if(current_meng.data.is_leaf){
                         return
                     }
-                    const that = this;
-                    this.meng_depth = focus === current_meng ? current_meng.depth - 1 : current_meng.depth;
+                    console.log(this.meng_depth)
+                    this.meng_depth = focus === current_meng ? (current_meng.depth - 1 > 0 ? current_meng.depth - 1 : 0) : current_meng.depth + 1;
                     focus = focus === current_meng ? current_meng = current_meng.parent : current_meng;
                     const new_root = assign_position(current_meng);
+                    const new_d = new_root.children ? [new_root, ...new_root.children] : [new_root]
                     meng_container.selectAll("g").remove();
-                    meng_container.selectAll("g").data([new_root, ...new_root.children])
+
+                    const cell = meng_container.selectAll("g").data(new_d)
                             .join("g")
-                            .attr("transform", d => `translate(${d.x0},${d.y0})`)
-                                .append("rect")
-                                .attr("class", d=>`m${d.depth}`)
-                                .attr("width", d => d.x1 - d.x0)
-                                .attr("height", d => d.y1 - d.y0)
-                                .attr("name", d=>d.data.name)
-                                .attr("fill", "transparent")
-                                .attr("stroke", "black")
-                                .attr("stroke-width", "1px")
-                                .attr("opacity", d=>{
-                                    if(d.depth == this.meng_depth) return "1"
-                                    else if(d.depth == this.meng_depth + 1) return "0.2"
-                                    else return "0"
-                                })
-                                .attr('cursor', 'pointer')
-                                .on("mouseenter", (_e, d) => {
-                                    d3.select(_e.target).attr("stroke", "red");
-                                    if(d.depth === 0){
-                                        return null;
-                                    }
-                                    const all_cited_nodes = h_books.map(b=>b.get_cited_nodes_by_depth(this.cite_depth, d.depth, d.data.name)).flat();
-                                    const all_names = all_cited_nodes.map(d=> concatName(d))
-                                    this.selectedNodes = d3.selectAll(`.l${this.cite_depth}`).filter( d => all_names.includes(concatName(d))).attr("fill", "red");
-                                })
-                                .on("mouseleave", (_e, d) => {
-                                    d3.select(_e.target).attr("stroke", "black")
-                                    if(d.depth === 0) return null;
-                                    this.selectedNodes.attr("fill", "none");
-                                    this.selectedNodes = [];
-                                })
-                                .on("click", clickMengEvent);
-                    
-                    // rects.each(function(){
-                    //     d3.select(this.parentNode).call(transition, that)
-                    // });
+                            .attr("transform", d => `translate(${d.x0},${d.y0})`);
+
+                    cell.append("rect")
+                        .attr("class", d=>`m${d.depth}`)
+                        .attr("width", d => d.x1 - d.x0)
+                        .attr("height", d => d.y1 - d.y0)
+                        .attr("name", d=>d.data.name)
+                        .attr("fill", "transparent")
+                        .attr("stroke", "black")
+                        .attr("stroke-width", "1px")
+                        .attr("opacity", d=>{
+                            if(d.depth == this.meng_depth) return "1"
+                            else if(d.depth == this.meng_depth + 1) return "0.2"
+                            else return "0"
+                        })
+                        .attr('cursor', 'pointer')
+                        .on("mouseenter", (_e, d) => {
+                            d3.select(_e.target).attr("stroke", "red");
+                            if(d.depth === 0){
+                                return null;
+                            }
+                            const all_cited_nodes = h_books.map(b=>b.get_cited_nodes_by_depth(this.cite_depth, d.depth, d.data.name)).flat();
+                            const all_names = all_cited_nodes.map(d=> concatName(d))
+                            this.selectedNodes = d3.selectAll(`.l${this.cite_depth}`).filter( d => all_names.includes(concatName(d))).attr("fill", "red");
+                        })
+                        .on("mouseleave", (_e, d) => {
+                            d3.select(_e.target).attr("stroke", "black")
+                            if(d.depth === 0) return null;
+                            this.selectedNodes.attr("fill", "none");
+                            this.selectedNodes = [];
+                        })
+                        .on("click", clickMengEvent)
+                    cell.call(addMengTexts);
             };
+
             cell.append("rect")
                 .attr("class", d=>`m${d.depth}`)
                 .attr("width", d => d.x1 - d.x0)
@@ -158,22 +155,25 @@ export default{
                     else return "0"
                 })
                 .attr('cursor', 'pointer')
-                .on("mouseover", (_e, d) => {
-                    d3.select(_e.target).attr("stroke", "red");
-                    if(d.depth === 0){
-                        return null;
-                    }
-                    const all_cited_nodes = h_books.map(b=>b.get_cited_nodes_by_depth(this.cite_depth, d.depth, d.data.name)).flat();
-                    const all_names = all_cited_nodes.map(d=> concatName(d))
-                    this.selectedNodes = d3.selectAll(`.l${this.cite_depth}`).filter( d => all_names.includes(concatName(d))).attr("fill", "red");
-                })
-                .on("mouseout", (_e, d) => {
-                    d3.select(_e.target).attr("stroke", "black")
-                    if(d.depth === 0) return null;
-                    this.selectedNodes.attr("fill", "none");
-                    this.selectedNodes = [];
-                })
+                // .on("mouseover", (_e, d) => {
+                //     d3.select(_e.target).attr("stroke", "red");
+                //     if(d.depth === 0){
+                //         return null;
+                //     }
+                //     const all_cited_nodes = h_books.map(b=>b.get_cited_nodes_by_depth(this.cite_depth, d.depth, d.data.name)).flat();
+                //     const all_names = all_cited_nodes.map(d=> concatName(d))
+                //     this.selectedNodes = d3.selectAll(`.l${this.cite_depth}`).filter( d => all_names.includes(concatName(d))).classed("hl", true);
+                //     // console.log(this.selectedNodes)
+                //     // console.log(this.selectedNodes.data())
+                //     // this.draw_sankey(_e, d);
+                // })
+                // .on("mouseout", (_e, d) => {
+                //     d3.select(_e.target).attr("stroke", "black")
+                //     if(d.depth === 0) return null;
+                //     this.selectedNodes.attr("fill", "transparent");
+                // })
                 .on("click", clickMengEvent);
+            cell.call(addMengTexts);
         },
         lengthCal(v){
             const nodes_arr = h_books.map(node => node.get_nodes_by_depth(this.cite_depth));
@@ -241,16 +241,15 @@ export default{
                     .attr("class", (d, i)=>{
                         return `l${d.data.level}`;
                     })
-                    .on("mouseover", (event, d) => {
-                        this.selectedNodes = d3.selectAll(`.m${this.meng_depth}`)
-                        .filter(node=> {
-                            return d.cite[this.meng_depth].includes(node.data.name)})
-                        .attr("fill","red");
-                    })
-                    .on("mouseout", (event, d) => {
-                        this.selectedNodes.attr("fill", "none");
-                        this.selectedNodes = [];
-                    })
+                    // .on("mouseover", (event, d) => {
+                    //     this.selectedNodes = d3.selectAll(`.m${this.meng_depth}`)
+                    //                             .filter(node=> {
+                    //                                 return d.cite[this.meng_depth].includes(node.data.name)})
+                    //                             .attr("fill","red");
+                    // })
+                    // .on("mouseout", (event, d) => {
+                    //     this.selectedNodes.attr("fill", "transparent");
+                    // })
                     .on("click", this.openDetail)
             }
 
@@ -258,6 +257,56 @@ export default{
             const upperRect = this.addRect(upperCell);
             const upperText = this.addText(upperCell);
             return [citeBooksContainer, upperCell, upperRect, upperText]
+        },
+        draw_sankey(event, d){
+            const meng_g = d3.select(".meng").selectAll(`.m${this.meng_depth}`);
+            const all_cited_rect = d3.selectAll(`.l${this.cite_depth}`);
+            // console.log(meng_g.data(), all_books_rect.data())
+            d3.selectAll(`.l${this.cite_depth}`)
+            .each((d,i,nodes) => {
+                const n = nodes[i];
+                const parent = d3.select(n.parentNode);
+                let bbox = n.getBBox();
+                const cite_num = count(d.cite[this.meng_depth]);
+                console.log('aaaaa',cite_num, d.cite[this.meng_depth])
+                let _start = 0;
+                d.cite_rect = {}
+                for (const [key, value] of Object.entries(cite_num)) {
+                    d.cite_rect[key] = {
+                        x: _start, y:0, w: value / d.cite[this.meng_depth].length  * bbox.width, h: bbox.height, num: value
+                    }
+                    _start += d.cite_rect[key].w;
+                    parent.append("rect")
+                        .attr("x", d.cite_rect[key].x + 0.5 )
+                        .attr("y", d.cite_rect[key].y + 0.5)
+                        .attr("width", d.cite_rect[key].w - 1)
+                        .attr("height", d.cite_rect[key].h - 1)
+                        .attr("stroke", "none")
+                        .attr("fill", "none")
+                        .attr("class", key ? key : "null")
+                }
+            })
+
+            meng_g
+                .on("mouseover",(event,d)=>{
+                    console.log('aaaaaaaa')
+                    // const node = d3.select(event.target);
+                    const all_cited_nodes = h_books.map(b=>b.get_cited_nodes_by_depth(this.cite_depth, d.depth, d.data.name)).flat();
+                    const all_names = all_cited_nodes.map(d=> concatName(d))
+                    d3.selectAll(`.l${this.cite_depth}`)
+                        .filter( _d => all_names.includes(concatName(_d)))
+                        .each((_d, i, nodes) => {
+                            const relatedRect = d3.select(nodes[i].parentNode).select(`.${d.data.name ? d.data.name : "null"}`).classed("hl",true);
+                            console.log(relatedRect)
+                            // console.log(relatedRect.node())
+                            // console.log(d.data.name, _d.cite_rect[d.data.name].num)
+                            // return d
+                        })
+                })
+                .on("mouseout", (event, d) => {
+                    d3.selectAll(".hl").classed("hl", false);
+                })
+            // all_books_rect.data().append("rect")
         }
     },
     watch:{
@@ -266,6 +315,7 @@ export default{
             this.upperCell = this.addNodes(this.citeBooksContainer);
             this.upperRect = this.addRect(this.upperCell);
             this.upperText = this.addText(this.upperCell);
+            this.draw_sankey();
         },
         showNextLevel(){
             this.upperRect
@@ -284,12 +334,13 @@ export default{
         d3.select("#canvas").attr("width", this.totalWidth).attr("height", this.upperHeight);
         this.svg = this.mengInit();
         [this.citeBooksContainer, this.upperCell, this.upperRect, this.upperText] = this.initUpper();
+        this.draw_sankey()
     },
 }
 </script>
 
 
-<style scoped>
+<style>
 #main{
     width: 100%; 
     height: 99%; 
@@ -299,5 +350,9 @@ export default{
 
 .node_container{
 
+}
+
+.hl{
+    fill: aqua;
 }
 </style>
