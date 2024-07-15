@@ -13,8 +13,11 @@
                 <svg id="canvas" style="overflow: scroll;"></svg>
             </svg>
         </div>
-        <div style="width: 10%; height: 100%;">
-            <Timeline />
+        <div style="width: 6%; height: 100%;">
+            <Timeline @book-hover="highlightBook" @book-unhover="unhighlightBook" />
+        </div>
+        <div style="width: 4%; height: 100%;">
+            <Title @level-selected="updateLevel" @level-selected-meng="updateMengLevel"/>
         </div>
     </div>
 </template>
@@ -32,7 +35,8 @@ import Timeline from '@/components/timeline.vue';
 import transition from '@/js/transition.js'
 
 var t = d3.transition().duration(750);
-var h_books = book_data.map(book => tree(book));
+import Title from './components/title.vue';
+// var h_books = book_data.map(book => tree(book));
 export default{
     data() {
         return {
@@ -48,7 +52,8 @@ export default{
         }
     },
     components:{
-        Timeline: Timeline
+        Timeline: Timeline,
+        Title: Title
     },
     computed:{
         bottomHeight(){
