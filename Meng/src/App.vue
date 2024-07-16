@@ -9,7 +9,7 @@
             <Timeline @book-hover="highlightBook" @book-unhover="unhighlightBook" />
         </div>
         <div style="width: 4%; height: 100%;">
-            <Title @level-selected="updateLevel" @level-selected-meng="updateMengLevel" @loc-model="updateLocModel" :cite-depth="cite_depth" :meng-depth="meng_depth" :loc-model="loc_model"/>
+            <Title />
         </div>
     </div>
 </template>
@@ -82,17 +82,6 @@ export default{
             d3.selectAll("rect.l0, rect.l1, rect.l2, rect.l3").style("opacity", 1);
             // 将所有书的 text 的透明度设置为 0
             d3.selectAll("text.books").style("opacity", 0);
-        },
-        updateLevel(level) {
-            this.cite_depth = level;
-        },
-        updateLocModel(model){
-            // console.log(model)
-            this.loc_model = model;
-            // this.upperCell.remove();
-            // this.mengInit();
-            // [this.citeBooksContainer, this.upperCell, this.upperRect, this.upperText] = this.initUpper();
-            // this.init_sankey()
         },
         assign_position(meng_root, meng_padding = 3){
             return packedSquare()
