@@ -6,7 +6,7 @@
 
 <script>
 import * as d3 from 'd3';
-import book_data from '@/assets/book_tree_full.json';
+import book_data from '@/assets/cited_tree.json';
 import tree from "@/js/tree";
 
 export default{
@@ -41,7 +41,7 @@ export default{
             this.books.sort((a, b) => b.data.writing_year - a.data.writing_year);
 
             const bookNames = this.books.map(book => book.data.name);  // 使用书名作为域
-            console.log(this.books)
+            // console.log(this.books)
 
             const yScale = d3.scaleBand()
                 .domain(bookNames)  // 使用书名作为域
