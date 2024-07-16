@@ -1,12 +1,11 @@
 import * as d3 from 'd3';
 import { concatName } from '@/js/utils'
 
-export default function(book){
-    var hier = d3.hierarchy(book).sum(d=> d.is_leaf ? 1 : 0);
-    
+export default function(book){    
     // console.log(hier.__proto__)
     // 给引用梦溪笔谈的书加上引用的数据
     if(book.name !== "meng"){
+        var hier = d3.hierarchy(book).sum(d=> d.is_leaf ? 1 : 0);
         hier.each( n => n.cite = [[],[],[],[]])
         // 统计引用梦的条目
         hier.eachAfter( (current) => {
@@ -37,6 +36,7 @@ export default function(book){
             }
         })
     }else{
+        var hier = d3.hierarchy(book).sum(d=> d.is_leaf ? d.value.length : 0);
         hier.__proto__.get_cited_doms_by_m_node = function(h_books, cite_depth){
             const all_names = h_books
                         .map(b=>b.get_cited_nodes_by_depth(cite_depth, this.depth, this.data.name))
@@ -72,6 +72,15 @@ export default function(book){
     hier.__proto__.find_node_and_get_first_descendants = function(_node){
         const found = this.find(node => concatName(node) === concatName(_node));
         return found.children ? [found, ...found.children] : [found]
+    }
+
+    hier.__proto__.find_parent_by_level = function(level){
+        let current_node = this;
+        while(current_node.depth !== level){
+            if(!current_node.parent) return undefined;
+            current_node = current_node.parent;
+        }
+        return current_node;
     }
 
     
