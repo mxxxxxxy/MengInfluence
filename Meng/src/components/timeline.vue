@@ -137,10 +137,10 @@ export default{
                         image.attr("width", rectWidth * 3)
                             .attr("height", yScale.bandwidth() * 3);
                         // 缩小其他的图片
-                        svg.selectAll("image")
-                        .filter(":not(." + book.data.name.replace(/\s+/g, '-') + ")")
-                        .attr("width", rectWidth * 0)
-                        .attr("height", yScale.bandwidth() * 0);
+                        svg.selectAll("image:not(.梦溪笔谈)")
+                            .filter(":not(." + book.data.name.replace(/\s+/g, '-') + ")")
+                            .attr("width", rectWidth * 0)
+                            .attr("height", yScale.bandwidth() * 0);
                         // 显示书名
                         svg.append("text")
                             .attr("x", padding_w - 12)
@@ -153,9 +153,9 @@ export default{
                         image.attr("width", rectWidth)
                             .attr("height", yScale.bandwidth());
                         // 恢复其他的图片
-                        svg.selectAll("image")
-                        .attr("width", rectWidth)
-                        .attr("height", yScale.bandwidth());
+                        svg.selectAll("image:not(.梦溪笔谈)")
+                            .attr("width", rectWidth)
+                            .attr("height", yScale.bandwidth());
                         this.$emit('book-unhover', book.data.name);
                         // 移除书名
                         svg.select("text").remove();
@@ -197,7 +197,15 @@ export default{
             });
 
 
+            let imagePath = new URL('../assets/images/' + '梦溪笔谈' + '.png', import.meta.url).href;  // 生成图片路径
 
+            let image_meng = svg.append("image")  // 在循环内部为 image 变量赋值
+                .attr("x", padding_w - 4)  // 使用与 rect 相同的 x 值
+                .attr("y", height)  // 使用与 rect 相同的 y 值
+                .attr("width", width*0.2*3)
+                .attr("height", height * 0.1)
+                .attr("href", imagePath)  // 使用相对路径来引用图片
+                .attr("class", '梦溪笔谈')
 
         }
 
