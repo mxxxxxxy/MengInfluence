@@ -1,12 +1,4 @@
 <template>
-    <header style="display: flex;">
-        <div @click="this.cite_depth = 0" style="width: 20px; height: 20px; cursor: pointer; margin-right: 5px;">0</div>
-        <div @click="this.cite_depth = 1" style="width: 20px; height: 20px; cursor: pointer;margin-right: 5px;">1</div>
-        <div @click="this.cite_depth = 2" style="width: 20px; height: 20px; cursor: pointer;margin-right: 5px;">2</div>
-        <div @click="this.cite_depth = 3" style="width: 20px; height: 20px; cursor: pointer;margin-right: 5px;">3</div>
-        <!-- <div @click="this.showNextLevel = false" style="width: 20px; height: 20px; cursor: pointer;margin-right: 5px;">F</div>
-        <div @click="this.showNextLevel = true" style="width: 20px; height: 20px; cursor: pointer;margin-right: 5px;">T</div> -->
-    </header>
     <div id="main">
         <div ref="main" style="width: 90%; height: 100%;">
             <svg id="main_svg" width="100%" height="100%">
@@ -49,7 +41,7 @@ export default{
             cite_depth: 1,
             meng_depth: 1,
             selectedNodes: [],
-            showNextLevel: false,
+            showNextLevel: true,
         }
     },
     components:{
@@ -65,6 +57,65 @@ export default{
         },
     },
     methods:{
+        highlightBook(bookName) {
+            // 高亮显示名为 bookName 的书籍
+            const book = d3.select(`.${bookName.replace(/\s+/g, '-')}`);
+            // book.select("rect.l0, rect.l1, rect.l2, rect.l3").style("fill", "red");
+            // 放大名为 bookName 的书籍的 rect
+            book.selectAll("rect.l0, rect.l1, rect.l2, rect.l3").each(function(d) {
+                d3.select(this).attr("height", function(d) { return (d.y1 - d.y0) * 4; });
+            });
+            // 隐藏其他书的 rect 和 text
+            d3.selectAll("rect.l0, rect.l1, rect.l2, rect.l3, text.books").style("opacity", 0);
+            book.selectAll("rect.l0, rect.l1, rect.l2, rect.l3, text.books").style("opacity", 1);
+        },
+        unhighlightBook(bookName) {
+            // 取消高亮显示名为 bookName 的书籍
+            const book = d3.select(`.${bookName.replace(/\s+/g, '-')}`);
+            // book.select("rect.l0, rect.l1, rect.l2, rect.l3").style("fill", "none");
+            book.selectAll("rect.l0, rect.l1, rect.l2, rect.l3").attr("height", function(d) { return (d.y1 - d.y0)/2; });
+            // 显示所有书的 rect
+            d3.selectAll("rect.l0, rect.l1, rect.l2, rect.l3").style("opacity", 1);
+            // 将所有书的 text 的透明度设置为 0
+            d3.selectAll("text.books").style("opacity", 0);
+        },
+        updateLevel(level) {
+            this.cite_depth = level;
+        },
+        updateLevelMeng(level) {
+            // 清除之前的高亮效果
+            d3.selectAll('.l1, .l2, .l3').style('fill', 'none');
+            switch (level) {
+                case '类':
+                    this.current_depth = 1;
+                    d3.selectAll('.l1').style('fill', 'red');
+                    break;
+                case '卷':
+                    this.current_depth = 2;
+                    d3.selectAll('.l2').style('fill', 'red');
+                    break;
+                case '条':
+                    this.current_depth = 3;
+                    d3.selectAll('.l3').style('fill', 'red');
+                    break;
+            }
+        },
+        updateMengLevel(level) {
+            switch (level) {
+                case '类':
+                    this.meng_depth = 1;
+                    break;
+                case '卷':
+                    this.meng_depth = 2;
+                    break;
+                case '条':
+                    this.meng_depth = 3;
+                    break;
+            }
+            // 更新所有与 meng 相关的 rect 的颜色
+            d3.selectAll('.m1, .m2, .m3').style('fill', 'none');
+            d3.selectAll(`.m${this.meng_depth}`).style('fill', 'red');
+        },
         assign_position(meng_root, meng_padding = 3){
             return packedSquare()
                 .set_depth(100)
@@ -80,7 +131,7 @@ export default{
                             .data(root.find_node_and_get_first_descendants(root))
                             .join("g")
                             .attr("transform", d => `translate(${d.x0},${d.y0})`)
-            const addMengTexts = (cell) =>{
+            this.addMengTexts = (cell) =>{
                     cell.append("text")
                         .filter( d=> d.depth == this.meng_depth)
                         .text(d => d.data.name ? d.data.name : "")
@@ -105,7 +156,7 @@ export default{
                 })
                 .attr('cursor', 'pointer')
                 .on("click", this.mengChange);
-            cell.call(addMengTexts);
+            cell.call(this.addMengTexts);
         },
         mengChange(event, current_meng){
             let focus = meng_root;
@@ -119,8 +170,8 @@ export default{
             focus = focus === current_meng ? current_meng = current_meng.parent : current_meng;
             // console.log(current_meng)
             const new_root = this.assign_position(current_meng);
-            console.log(new_root)
-            const new_d = new_root.children ? [new_root, ...new_root.children] : [new_root]
+            const new_d = new_root.children ? [new_root, ...new_root.children] : [new_root];
+            console.log(new_d);
             meng_container.selectAll("g").remove();
 
             const cell = meng_container.selectAll("g").data(new_d)
@@ -159,7 +210,8 @@ export default{
                     this.selectedNodes = [];
                 })
                 .on("click", this.mengChange)
-            // cell.call(addMengTexts);
+            cell.call(this.addMengTexts);
+            this.init_sankey();
         },
         lengthCal(v){
             const nodes_arr = h_books.map(node => node.get_nodes_by_depth(this.cite_depth));
@@ -373,10 +425,11 @@ export default{
             this.upperRect
                 .attr("opacity", d => {
                     if(d.depth == this.cite_depth) return "1"
-                    else if(d.depth == this.cite_depth + 1) return "0.2"
+                    else if(d.depth == this.cite_depth + 1) return "1"
                     else return "0"
                 })
-                .style("display", d=> d.depth == this.cite_depth || this.showNextLevel ? null : "none");
+                // .style("display", d=> d.depth == this.cite_depth || this.showNextLevel ? null : "none");
+                // .style("display", d=> d.depth == this.cite_depth || this.showNextLevel ? null : "none");
         },
         meng_depth(){
 

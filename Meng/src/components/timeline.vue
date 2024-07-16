@@ -15,13 +15,24 @@ export default{
             books: book_data.map(book => {
                 // console.log(tree(book).data.writing_year);
                 return tree(book);
-            })
+            }),
+            totalWidth: 0,
+            totalHeight: 0,
+            bottomHeightRatio: 0.1,
         }
+    },
+    computed:{
+        bottomHeight(){
+            return this.totalHeight * this.bottomHeightRatio;
+        },
+        upperHeight(){
+            return this.totalHeight * (1 - this.bottomHeightRatio);
+        },
     },
     methods:{
         drawTimeline() {
             const svg = d3.select("#timeline");
-            const height = svg.node().getBoundingClientRect().height * 0.9;
+            const height = svg.node().getBoundingClientRect().height*0.9;
             const width = svg.node().getBoundingClientRect().width
             const padding_w = width * 0.5;
             const padding_h = 2;
@@ -30,7 +41,7 @@ export default{
             this.books.sort((a, b) => b.data.writing_year - a.data.writing_year);
 
             const bookNames = this.books.map(book => book.data.name);  // 使用书名作为域
-            // console.log(this.books)
+            console.log(this.books)
 
             const yScale = d3.scaleBand()
                 .domain(bookNames)  // 使用书名作为域
