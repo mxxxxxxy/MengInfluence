@@ -9,7 +9,7 @@
             <Timeline @book-hover="highlightBook" @book-unhover="unhighlightBook" />
         </div>
         <div style="width: 4%; height: 100%;">
-            <Title @level-selected="updateLevel" @level-selected-meng="updateMengLevel"/>
+            <Title @level-selected="updateLevel" @level-selected-meng="updateMengLevel" @loc-model="updateLocModel" :cite-depth="cite_depth" :meng-depth="meng_depth" :loc-model="loc_model"/>
         </div>
     </div>
 </template>
@@ -42,6 +42,7 @@ export default{
             meng_depth: 1,
             selectedNodes: [],
             showNextLevel: true,
+            loc_model: 1,
         }
     },
     components:{
@@ -83,38 +84,18 @@ export default{
             this.cite_depth = level;
         },
         updateLevelMeng(level) {
-            // 清除之前的高亮效果
-            d3.selectAll('.l1, .l2, .l3').style('fill', 'none');
-            switch (level) {
-                case '类':
-                    this.current_depth = 1;
-                    d3.selectAll('.l1').style('fill', 'red');
-                    break;
-                case '卷':
-                    this.current_depth = 2;
-                    d3.selectAll('.l2').style('fill', 'red');
-                    break;
-                case '条':
-                    this.current_depth = 3;
-                    d3.selectAll('.l3').style('fill', 'red');
-                    break;
-            }
+
         },
         updateMengLevel(level) {
-            switch (level) {
-                case '类':
-                    this.meng_depth = 1;
-                    break;
-                case '卷':
-                    this.meng_depth = 2;
-                    break;
-                case '条':
-                    this.meng_depth = 3;
-                    break;
-            }
-            // 更新所有与 meng 相关的 rect 的颜色
-            d3.selectAll('.m1, .m2, .m3').style('fill', 'none');
-            d3.selectAll(`.m${this.meng_depth}`).style('fill', 'red');
+
+        },
+        updateLocModel(model){
+            // console.log(model)
+            this.loc_model = model;
+            // this.upperCell.remove();
+            // this.mengInit();
+            // [this.citeBooksContainer, this.upperCell, this.upperRect, this.upperText] = this.initUpper();
+            // this.init_sankey()
         },
         assign_position(meng_root, meng_padding = 3){
             return packedSquare()
@@ -141,7 +122,6 @@ export default{
                         .classed("hide_text" ,d=> d.depth != this.meng_depth)
                         .classed("vertcal_text_meng",true);
             }
-
             cell.append("rect")
                 .attr("class", d=>`m${d.depth}`)
                 .attr("width", d => d.x1 - d.x0)
@@ -157,7 +137,6 @@ export default{
                 .classed("no_available", d => d.depth != this.meng_depth)
                 .attr('cursor', 'pointer')
                 .on("click", this.mengChange);
-
             cell.call(this.addMengTexts);
         },
         // mengChange(event, current_meng){
@@ -255,13 +234,31 @@ export default{
         },
         initUpper(){
             const svg = d3.select("#canvas");
-
+            // 创建一个映射，将"type"字段映射到一个特定的x位置
+            const typeToX = {
+                "经": this.padding*7,
+                "史": (this.totalWidth - this.padding*7) / 4 * 1,
+                "子": (this.totalWidth - this.padding*7) / 4 * 2,
+                "集": (this.totalWidth - this.padding*7) / 4 * 3,
+            };
+            const typeToX2 = {
+                "哲学宗教": this.padding*7,
+                "政治法礼": (this.totalWidth - this.padding*7) / 7 * 1,
+                "文化艺术": (this.totalWidth - this.padding*7) / 7 * 2,
+                "历史地理": (this.totalWidth - this.padding*7) / 7 * 3,
+                "科学医药": (this.totalWidth - this.padding*7) / 7 * 4,
+                "记闻杂谈": (this.totalWidth - this.padding*7) / 7 * 5,
+                "": (this.totalWidth - this.padding*7) / 7 * 6,
+            };
+            const typeCounts = {};
+            // console.log(meng_root.get_nodes_by_depth(2).map(d=>d.data.name))
+            // console.log(meng_root.get_nodes_by_depth(2))
             const citeBooksContainer = svg.selectAll(".line_container")
                                 .data(h_books)
                                 .join('g')
                                 .attr('class', book => `${book.data.name}`)
                                 .attr("transform", (node, i, arr) => {
-                                    return `translate(0, ${this.upperHeight / arr.length * i})`})
+                                    return `translate(${this.padding*7}, ${this.upperHeight*0.9 / arr.length * i})`})
 
             this.addNodes = (citeBooksContainer) => citeBooksContainer.selectAll('g')
                                 .attr("class", "node_container")
@@ -269,7 +266,42 @@ export default{
                                 .join("g")
                                 .attr("name", d=>d.data.name)
                                 // .attr("transform", (d, i, arr) => `translate(${this.totalWidth / arr.length * i}, 0)`)
-                                .attr("transform", (d, i, arr) => `translate(${this.totalWidth / arr.length * i}, 0)`)
+                                // .attr("transform", (d, i, arr) => `translate(${(this.totalWidth-this.padding*7) / arr.length * i}, 0)`)
+                                .attr("transform", (d, i, arr) => {
+                                    if(this.loc_model == 2){
+                                        console.log('test:', this.loc_model)
+                                        let x;
+                                        if(d.depth == 0){
+                                            x = typeToX[arr[0].__data__.data.type];
+                                            return `translate(${x}, 0)`;
+                                        }
+                                        // if(d.depth == 1){
+
+                                        // }
+                                        if(d.depth == 2){
+                                            // console.log(arr[0].__data__.data.主题0顺序)
+                                            const type = arr[0].__data__.data.主题0归类;
+                                            // 如果这个"type"还没有被计数过，就初始化它
+                                            if (!typeCounts[type]) {
+                                                typeCounts[type] = 0;
+                                            }
+                                            // 计算x的位置，然后更新这个"type"的计数
+                                            x = typeToX2[type] + typeCounts[type] * 0;  // 偏移量可以根据你的需求进行调整
+                                            typeCounts[type]++;
+                                            return `translate(${x}, 0)`;
+                                        }
+                                        // if(d.depth == 3){
+
+                                        // }
+                                        else{
+                                            return `translate(${(this.totalWidth-this.padding*7) / arr.length * i}, 0)`;
+                                        }
+                                    }
+                                    else{
+                                        console.log('test:', this.loc_model)
+                                        return `translate(${(this.totalWidth-this.padding*7) / arr.length * i}, 0)`;
+                                    }
+                                })
                                 .selectAll("g")
                                 .data(node => {
                                     const assign_position = packedSquare()
@@ -294,7 +326,7 @@ export default{
             }
             this.addRect = (upperCell) => {
                 return upperCell.append("rect")
-                    .attr("width", d => (d.x1 - d.x0))
+                    .attr("width", d => (d.x1 - d.x0)/3)
                     .attr("height", d => (d.y1 - d.y0))
                     .attr("fill", "transparent")
                     .attr("stroke", "black")
@@ -377,10 +409,11 @@ export default{
                     const bbox = nodes[i].getBBox();
                     const parent = d3.select(nodes[i].parentNode);
                     const all_citation = d.count_cited_nodes_by_cite_depth(h_books, this.cite_depth)
+
                     const cited_num = count(all_citation);
                     let _start = 0;
                     d.cite_rect = {}
-                    for(let [key, value] of Object.entries(cited_num)){
+                    for(let [key, value] of Object.entries(cited_num)){ //tt
                         d.cite_rect[key] = {
                             x: _start, y:0, w: value / all_citation.length  * bbox.width, h: bbox.height, num: value
                         }
