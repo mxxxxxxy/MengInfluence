@@ -4,8 +4,8 @@
         <div @click="this.cite_depth = 1" style="width: 20px; height: 20px; cursor: pointer;margin-right: 5px;">1</div>
         <div @click="this.cite_depth = 2" style="width: 20px; height: 20px; cursor: pointer;margin-right: 5px;">2</div>
         <div @click="this.cite_depth = 3" style="width: 20px; height: 20px; cursor: pointer;margin-right: 5px;">3</div>
-        <div @click="this.showNextLevel = false" style="width: 20px; height: 20px; cursor: pointer;margin-right: 5px;">F</div>
-        <div @click="this.showNextLevel = true" style="width: 20px; height: 20px; cursor: pointer;margin-right: 5px;">T</div>
+        <!-- <div @click="this.showNextLevel = false" style="width: 20px; height: 20px; cursor: pointer;margin-right: 5px;">F</div>
+        <div @click="this.showNextLevel = true" style="width: 20px; height: 20px; cursor: pointer;margin-right: 5px;">T</div> -->
     </header>
     <div id="main">
         <div ref="main" style="width: 90%; height: 100%;">
@@ -25,12 +25,11 @@
 
 <script>
 import * as d3 from 'd3';
-import book_data from '@/assets/book_tree_full.json';
-// import book_data from '@/assets/book_tree.json';
-import meng_data from '@/assets/meng_full_new.json';
+import book_data from '@/assets/cited_tree.json';
+import meng_data from '@/assets/meng_full.json';
 import packedSquare from "@/js/packedSquare"
 import tree from "@/js/tree"
-import { getRandomNumber, concatName, count} from '@/js/utils'
+import { getRandomNumber, concatName, count, curve_generator} from '@/js/utils'
 import Timeline from '@/components/timeline.vue';
 import transition from '@/js/transition.js'
 
@@ -145,33 +144,16 @@ export default{
                 .attr("class", d=>`m${d.depth}`)
                 .attr("width", d => d.x1 - d.x0)
                 .attr("height", d => d.y1 - d.y0)
-                .attr("name", d=>d.data.name)
-                .attr("fill", "transparent")
+                .attr("name", d=>d.data.name ? d.data.name : "null")
+                .attr("fill", d=>this.$color[d.data.name ? d.data.name : "null"])
                 .attr("stroke", "black")
-                .attr("stroke-width", "1px")
+                .attr("stroke-width", "0px")
                 .attr("opacity", d=>{
                     if(d.depth == this.meng_depth) return "1"
                     else if(d.depth == this.meng_depth + 1) return "0.2"
                     else return "0"
                 })
                 .attr('cursor', 'pointer')
-                // .on("mouseover", (_e, d) => {
-                //     d3.select(_e.target).attr("stroke", "red");
-                //     if(d.depth === 0){
-                //         return null;
-                //     }
-                //     const all_cited_nodes = h_books.map(b=>b.get_cited_nodes_by_depth(this.cite_depth, d.depth, d.data.name)).flat();
-                //     const all_names = all_cited_nodes.map(d=> concatName(d))
-                //     this.selectedNodes = d3.selectAll(`.l${this.cite_depth}`).filter( d => all_names.includes(concatName(d))).classed("hl", true);
-                //     // console.log(this.selectedNodes)
-                //     // console.log(this.selectedNodes.data())
-                //     // this.draw_sankey(_e, d);
-                // })
-                // .on("mouseout", (_e, d) => {
-                //     d3.select(_e.target).attr("stroke", "black")
-                //     if(d.depth === 0) return null;
-                //     this.selectedNodes.attr("fill", "transparent");
-                // })
                 .on("click", clickMengEvent);
             cell.call(addMengTexts);
         },
@@ -230,7 +212,7 @@ export default{
                     .attr("height", d => d.y1 - d.y0)
                     .attr("fill", "transparent")
                     .attr("stroke", "black")
-                    .attr("stroke-width", "1px")
+                    .attr("stroke-width", "0px")
                     .attr("opacity", d=>{
                         if(d.depth == this.cite_depth) return "1"
                         else if(d.depth == this.cite_depth + 1) return "0.2"
@@ -241,15 +223,6 @@ export default{
                     .attr("class", (d, i)=>{
                         return `l${d.data.level}`;
                     })
-                    // .on("mouseover", (event, d) => {
-                    //     this.selectedNodes = d3.selectAll(`.m${this.meng_depth}`)
-                    //                             .filter(node=> {
-                    //                                 return d.cite[this.meng_depth].includes(node.data.name)})
-                    //                             .attr("fill","red");
-                    // })
-                    // .on("mouseout", (event, d) => {
-                    //     this.selectedNodes.attr("fill", "transparent");
-                    // })
                     .on("click", this.openDetail)
             }
 
@@ -258,17 +231,15 @@ export default{
             const upperText = this.addText(upperCell);
             return [citeBooksContainer, upperCell, upperRect, upperText]
         },
-        draw_sankey(event, d){
+        init_sankey(){
             const meng_g = d3.select(".meng").selectAll(`.m${this.meng_depth}`);
             const all_cited_rect = d3.selectAll(`.l${this.cite_depth}`);
-            // console.log(meng_g.data(), all_books_rect.data())
-            d3.selectAll(`.l${this.cite_depth}`)
-            .each((d,i,nodes) => {
+
+            all_cited_rect.each((d,i,nodes) => {
                 const n = nodes[i];
                 const parent = d3.select(n.parentNode);
                 let bbox = n.getBBox();
                 const cite_num = count(d.cite[this.meng_depth]);
-                console.log('aaaaa',cite_num, d.cite[this.meng_depth])
                 let _start = 0;
                 d.cite_rect = {}
                 for (const [key, value] of Object.entries(cite_num)) {
@@ -277,36 +248,100 @@ export default{
                     }
                     _start += d.cite_rect[key].w;
                     parent.append("rect")
-                        .attr("x", d.cite_rect[key].x + 0.5 )
-                        .attr("y", d.cite_rect[key].y + 0.5)
-                        .attr("width", d.cite_rect[key].w - 1)
-                        .attr("height", d.cite_rect[key].h - 1)
+                        .attr("x", d.cite_rect[key].x)
+                        .attr("y", d.cite_rect[key].y)
+                        .attr("width", d.cite_rect[key].w)
+                        .attr("height", d.cite_rect[key].h)
                         .attr("stroke", "none")
-                        .attr("fill", "none")
+                        .attr("stroke-width", "0")
+                        .attr("fill", this.$color[key ? key : "null"])
                         .attr("class", key ? key : "null")
+                        .attr("pointer-events", "none")
                 }
             })
 
-            meng_g
-                .on("mouseover",(event,d)=>{
-                    console.log('aaaaaaaa')
-                    // const node = d3.select(event.target);
-                    const all_cited_nodes = h_books.map(b=>b.get_cited_nodes_by_depth(this.cite_depth, d.depth, d.data.name)).flat();
-                    const all_names = all_cited_nodes.map(d=> concatName(d))
-                    d3.selectAll(`.l${this.cite_depth}`)
-                        .filter( _d => all_names.includes(concatName(_d)))
-                        .each((_d, i, nodes) => {
-                            const relatedRect = d3.select(nodes[i].parentNode).select(`.${d.data.name ? d.data.name : "null"}`).classed("hl",true);
-                            console.log(relatedRect)
-                            // console.log(relatedRect.node())
-                            // console.log(d.data.name, _d.cite_rect[d.data.name].num)
-                            // return d
+            all_cited_rect
+            .on("mouseover", (event, d) => {
+                const lower_rects = d3.select(".meng").selectAll(`.${concatName(d)}`)
+                .classed("hl", true);
+                const upper_rects = d3.select(event.target.parentNode).selectAll("rect").filter((_, i) => i != 0);
+                let curves = []
+                for(let lr of lower_rects){
+                    let lower_name = d3.select(lr).data()[0].data.name;
+                    lower_name = lower_name ? lower_name : "null";
+                    let upper_rect = upper_rects.filter(function(){
+                        return d3.select(this).attr("class") == lower_name;
+                    }).node()
+                    curves.push({
+                        d: curve_generator(this.main_svg.node(), upper_rect, lr),
+                        color: this.$color[lower_name]
+                    })
+                }
+                this.draw_sankey(d.data.name, curves)        
+            })
+            .on("mouseout", (event, d) => {
+                d3.selectAll(".hl").classed("hl", false);
+                this.remove_sankey(d.data.name)        
+            })
+
+            meng_g.each((d,i,nodes) => {
+                    const bbox = nodes[i].getBBox();
+                    const parent = d3.select(nodes[i].parentNode);
+                    const all_citation = d.count_cited_nodes_by_cite_depth(h_books, this.cite_depth)
+                    const cited_num = count(all_citation);
+                    let _start = 0;
+                    d.cite_rect = {}
+                    for(let [key, value] of Object.entries(cited_num)){
+                        d.cite_rect[key] = {
+                            x: _start, y:0, w: value / all_citation.length  * bbox.width, h: bbox.height, num: value
+                        }
+                        _start += d.cite_rect[key].w;
+                        parent.append("rect")
+                            .attr("x", d.cite_rect[key].x)
+                            .attr("y", d.cite_rect[key].y)
+                            .attr("width", d.cite_rect[key].w)
+                            .attr("height", d.cite_rect[key].h)
+                            .attr("stroke", "none")
+                            .attr("fill", "none")
+                            .attr("class", key)
+                            .attr("pointer-events", "none")
+                    }
+            })
+            meng_g.on("mouseover",(event,d)=>{
+                    let curves = []
+                    d.get_cited_doms_by_m_node(h_books, this.cite_depth)
+                    .each((_d, i, nodes) => {
+                        const selected_node = d3.select(nodes[i].parentNode).select(`.${d.data.name ? d.data.name : "null"}`)
+                        .classed("hl",true);
+                        const meng_node = d3.select(".meng")
+                            .selectAll(`.${concatName(_d)}`)
+                            .filter(meng_node=>meng_node.data.name == d.data.name)
+                            .node();
+
+                        curves.push({
+                            d: curve_generator(this.main_svg.node(),selected_node.node(), meng_node),
+                            color: this.$color[d.data.name]
                         })
+                    })
+                    this.draw_sankey(d.data.name, curves)
+                
                 })
-                .on("mouseout", (event, d) => {
+                .on("mouseout", (e, d) => {
                     d3.selectAll(".hl").classed("hl", false);
+                    this.remove_sankey(d.data.name)
                 })
-            // all_books_rect.data().append("rect")
+        },
+        draw_sankey(sankey_name, curves){
+            this.main_svg.selectAll(`.${sankey_name}sankey`)
+                        .data(curves)
+                        .join("path")
+                        .attr("d", _d=>_d.d)
+                        .attr("class",`${sankey_name}sankey`)
+                        .attr("fill", _d => _d.color)
+                        .attr("opacity", 0.3)
+        },
+        remove_sankey(sankey_name){
+            this.main_svg.selectAll(`.${sankey_name}sankey`).remove();
         }
     },
     watch:{
@@ -315,7 +350,7 @@ export default{
             this.upperCell = this.addNodes(this.citeBooksContainer);
             this.upperRect = this.addRect(this.upperCell);
             this.upperText = this.addText(this.upperCell);
-            this.draw_sankey();
+            this.init_sankey();
         },
         showNextLevel(){
             this.upperRect
@@ -331,10 +366,11 @@ export default{
         this.totalHeight = this.$refs['main'].clientHeight;
         this.totalWidth = this.$refs['main'].clientWidth - this.padding;
         this.minimum_book_height = this.totalHeight / book_data.length;
-        d3.select("#canvas").attr("width", this.totalWidth).attr("height", this.upperHeight);
-        this.svg = this.mengInit();
+        this.canvas = d3.select("#canvas").attr("width", this.totalWidth).attr("height", this.upperHeight);
+        this.main_svg = d3.select("#main_svg");
+        this.mengInit();
         [this.citeBooksContainer, this.upperCell, this.upperRect, this.upperText] = this.initUpper();
-        this.draw_sankey()
+        this.init_sankey()
     },
 }
 </script>
@@ -353,6 +389,9 @@ export default{
 }
 
 .hl{
-    fill: aqua;
+    filter: drop-shadow(3px 2px 2px rgb(0 0 0 / 0.6));
+    stroke: black;
+    stroke-width: 0.5px;
+    z-index: 100;
 }
 </style>

@@ -6,7 +6,7 @@
 
 <script>
 import * as d3 from 'd3';
-import book_data from '@/assets/book_tree_full.json';
+import book_data from '@/assets/cited_tree.json';
 import tree from "@/js/tree";
 
 export default{
