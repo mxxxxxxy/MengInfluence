@@ -24,6 +24,8 @@ import tree from "@/js/tree"
 import { getRandomNumber, concatName, count, curve_generator, groupBy } from '@/js/utils'
 import Timeline from '@/components/timeline.vue';
 import transition from '@/js/transition.js'
+import { mapActions, mapState, mapWritableState } from 'pinia'
+import { useGlobalStore } from "@/stores/global.js"
 
 import Title from './components/title.vue';
 
@@ -38,11 +40,11 @@ export default{
             bottomHeightRatio: 0.1,
             book_height: 0,
             padding: 2,
-            cite_depth: 1,
-            meng_depth: 1,
+            // cite_depth: 1,
+            // meng_depth: 1,
             selectedNodes: [],
             showNextLevel: true,
-            loc_model: 1,
+            // loc_model: 1,
         }
     },
     components:{
@@ -50,6 +52,7 @@ export default{
         Title: Title
     },
     computed:{
+        ...mapState(useGlobalStore, ['cite_depth', 'meng_depth', 'loc_model']),
         bottomHeight(){
             return this.totalHeight * this.bottomHeightRatio;
         },
@@ -82,12 +85,6 @@ export default{
         },
         updateLevel(level) {
             this.cite_depth = level;
-        },
-        updateLevelMeng(level) {
-
-        },
-        updateMengLevel(level) {
-
         },
         updateLocModel(model){
             // console.log(model)
@@ -231,8 +228,11 @@ export default{
             const value_range = [d3.min(_), d3.max(_)];
 
             let max_length = this.totalWidth / d3.max(length_arr);
-            let min_length = max_length * 0.2 > 50 ? max_length * 0.2 : 50;
-
+            let min_length = max_length * 0.2 > 20 ? max_length * 0.2 : 20;
+            if(this.cite_depth === 3){
+                min_length /= 3
+                max_length /= 3
+            }
             return d3.scaleLinear().domain(value_range).range([min_length, max_length])(v);
         },
         initUpper(){
@@ -328,9 +328,8 @@ export default{
                 console.log("openDetail")
             }
             this.addRect = (upperCell) => {
-                console.log(upperCell)
                 return upperCell.append("rect")
-                    .attr("width", d => (d.x1 - d.x0)/3)
+                    .attr("width", d => (d.x1 - d.x0))
                     .attr("height", d => (d.y1 - d.y0))
                     .attr("fill", "transparent")
                     .attr("stroke", "black")
