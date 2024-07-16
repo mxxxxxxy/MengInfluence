@@ -130,15 +130,16 @@ export default{
             const cell = meng_container.selectAll('g')
                             .data(root.descendants())
                             .join("g")
+                            .attr("class", d => `mg${d.depth}`)
                             .attr("transform", d => `translate(${d.x0},${d.y0})`)
             this.addMengTexts = (cell) =>{
                     cell.append("text")
-                        .filter( d=> d.depth == this.meng_depth)
                         .text(d => d.data.name ? d.data.name : "")
-                        .classed("vertcal_text_meng",true)
                         .attr("x", "0.45rem")
                         .attr("y", 0)
-                        .attr("cursor", "default");
+                        .attr("cursor", "default")
+                        .classed("hide_text" ,d=> d.depth != this.meng_depth)
+                        .classed("vertcal_text_meng",true);
             }
 
             cell.append("rect")
@@ -146,17 +147,17 @@ export default{
                 .attr("width", d => d.x1 - d.x0)
                 .attr("height", d => d.y1 - d.y0)
                 .attr("name", d=>d.data.name ? d.data.name : "null")
-                .attr("fill", d=>this.$color[d.data.name ? d.data.name : "null"])
+                .attr("fill", d=>{
+                    let l1_node = d.find_parent_by_level(1);
+                    if(!l1_node) return this.$color[undefined]
+                    return this.$color[l1_node.data.name ? l1_node.data.name : "null"]})
                 .attr("stroke", "black")
                 .attr("stroke-width", "0px")
-                .attr("opacity", d=>{
-                    console.log(d.depth, this.meng_depth)
-                    if(d.depth == this.meng_depth) return "1"
-                    else if(d.depth == this.meng_depth + 1) return "0.2"
-                    else return "0";
-                })
+                .attr("opacity", d => d.depth == this.meng_depth ? 1 : 0)
+                .classed("no_available", d => d.depth != this.meng_depth)
                 .attr('cursor', 'pointer')
                 .on("click", this.mengChange);
+
             cell.call(this.addMengTexts);
         },
         // mengChange(event, current_meng){
@@ -215,7 +216,30 @@ export default{
         //     this.init_sankey();
         // },
         mengChange(event, current_meng){
-            const childrens = current_meng.children.map(d=>d.data.name);
+            const show_meng_level = current_meng.depth + 1;
+            const father = d3.select(event.target.parentNode);
+            const childrens_name = current_meng.children.map(d=>d.data.name);
+            const children = d3.selectAll(`.m${show_meng_level}`)
+                .filter(d=>childrens_name.includes(d.data.name))
+                .classed("no_available", false);
+            children.transition(750)
+                .attr("opacity", 1);
+            d3.select(event.target)
+                .classed("no_available", true)
+                .transition(750)
+                .attr("opacity", 0);
+            father.select("text").classed("hide_text", true);
+            
+            if(show_meng_level !== 3){
+                setTimeout(()=>{
+                    children.each((d,i,nodes) => {
+                        d3.select(nodes[i].parentNode)
+                        .select("text")
+                        .classed("hide_text", false);
+                    })
+                }, 400)
+            }
+
             console.log(event, current_meng)
         },
         lengthCal(v){
@@ -237,13 +261,14 @@ export default{
                                 .join('g')
                                 .attr('class', book => `${book.data.name}`)
                                 .attr("transform", (node, i, arr) => {
-                                    return `translate(0, ${this.upperHeight*0.9 / arr.length * i})`})
+                                    return `translate(0, ${this.upperHeight / arr.length * i})`})
 
             this.addNodes = (citeBooksContainer) => citeBooksContainer.selectAll('g')
                                 .attr("class", "node_container")
                                 .data(book => book.get_nodes_by_depth(this.cite_depth))
                                 .join("g")
                                 .attr("name", d=>d.data.name)
+                                // .attr("transform", (d, i, arr) => `translate(${this.totalWidth / arr.length * i}, 0)`)
                                 .attr("transform", (d, i, arr) => `translate(${this.totalWidth / arr.length * i}, 0)`)
                                 .selectAll("g")
                                 .data(node => {
@@ -269,8 +294,8 @@ export default{
             }
             this.addRect = (upperCell) => {
                 return upperCell.append("rect")
-                    .attr("width", d => (d.x1 - d.x0)/2)
-                    .attr("height", d => (d.y1 - d.y0)/2)
+                    .attr("width", d => (d.x1 - d.x0))
+                    .attr("height", d => (d.y1 - d.y0))
                     .attr("fill", "transparent")
                     .attr("stroke", "black")
                     .attr("stroke-width", "0px")
@@ -487,4 +512,7 @@ export default{
     display: none;
 }
 
+.no_available{
+    pointer-events: none;
+}
 </style>

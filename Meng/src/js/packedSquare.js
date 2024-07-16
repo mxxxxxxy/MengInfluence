@@ -20,7 +20,8 @@ export default function() {
     return function(node) {
       if (node.children && depth > 0) {
         depth -= 1
-        Dice(node, node.x0 + padding, node.y0 + padding, node.x1 - padding, node.y1 - padding, padding);
+        // Dice(node, node.x0 + padding, node.y0 + padding, node.x1 - padding, node.y1 - padding, padding); //保留padding版本
+        Dice(node, node.x0 , node.y0 , node.x1 , node.y1, padding); //保留padding版本
       }
       var x0 = node.x0 ,
           y0 = node.y0 ,
