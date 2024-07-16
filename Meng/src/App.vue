@@ -237,7 +237,7 @@ export default{
                                 .join('g')
                                 .attr('class', book => `${book.data.name}`)
                                 .attr("transform", (node, i, arr) => {
-                                    return `translate(0, ${this.upperHeight / arr.length * i})`})
+                                    return `translate(0, ${this.upperHeight*0.9 / arr.length * i})`})
 
             this.addNodes = (citeBooksContainer) => citeBooksContainer.selectAll('g')
                                 .attr("class", "node_container")
@@ -255,8 +255,7 @@ export default{
                                 })
                                 .join("g")
                                 .attr("transform", d => `translate(${d.x0},${d.y0})`);
-        
-            this.addText = (upperCell) =>{
+            this.addText = (upperCell) => {
                 return upperCell.append("text")
                     .text(d => d.data.name ? d.data.name : "空")
                     .attr("y", 0)
@@ -270,8 +269,8 @@ export default{
             }
             this.addRect = (upperCell) => {
                 return upperCell.append("rect")
-                    .attr("width", d => d.x1 - d.x0)
-                    .attr("height", d => d.y1 - d.y0)
+                    .attr("width", d => (d.x1 - d.x0)/2)
+                    .attr("height", d => (d.y1 - d.y0)/2)
                     .attr("fill", "transparent")
                     .attr("stroke", "black")
                     .attr("stroke-width", "0px")
