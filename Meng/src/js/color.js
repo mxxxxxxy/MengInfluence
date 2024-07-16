@@ -1,6 +1,6 @@
+import { meng_root } from "@/App.vue"
 
-
-export default {
+let color = {
     "故事": "#EBE4D7",
     "辩证": "#EDD3D7",
     "乐律": "#DDE9DD",
@@ -23,3 +23,13 @@ export default {
     "": "#BEBEBE",
     null:"#BEBEBE"
 }
+
+meng_root.each(d=>{
+    let l1node = d.find_parent_by_level(1);
+    if(l1node){
+        color[d.data.name] = color[l1node.data.name]
+    }
+})
+
+
+export default color

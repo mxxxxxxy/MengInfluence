@@ -10,7 +10,8 @@ export default function(book){
         // 统计引用梦的条目
         hier.eachAfter( (current) => {
             if(current.data.is_leaf == true){
-                current.cite[3] = current.data.value.map(d=>d['name']);
+                // current.cite[3] = current.data.value.map(d=>d['name']);
+                current.cite[3] = current.data.name;
             }
             if(current.parent){
                 current.parent.cite[3] = current.parent.cite[3].concat(current.cite[3]);
@@ -37,11 +38,13 @@ export default function(book){
         })
     }else{
         var hier = d3.hierarchy(book).sum(d=> d.is_leaf ? d.value.length : 0);
+
         hier.__proto__.get_cited_doms_by_m_node = function(h_books, cite_depth){
             const all_names = h_books
                         .map(b=>b.get_cited_nodes_by_depth(cite_depth, this.depth, this.data.name))
                         .flat()
-                        .map(d=> concatName(d))
+                        .map(d=> concatName(d));
+           
             return d3.selectAll(`.l${cite_depth}`)
                 .filter( _d => all_names.includes(concatName(_d)));
         }
@@ -72,6 +75,11 @@ export default function(book){
     hier.__proto__.find_node_and_get_first_descendants = function(_node){
         const found = this.find(node => concatName(node) === concatName(_node));
         return found.children ? [found, ...found.children] : [found]
+    }
+
+    hier.__proto__.find_node_and_get_its_parent = function(_node){
+        const found = this.find(node => concatName(node) === concatName(_node));
+        return found.parent;
     }
 
     hier.__proto__.find_parent_by_level = function(level){

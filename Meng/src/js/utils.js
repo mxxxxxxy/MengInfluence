@@ -58,4 +58,18 @@ export function curve_generator(main_svg, upper_rect, lower_rect){
     return c1 + l1 + c2 + l2;
 }
 
+export function groupBy(array, key_f) {
+    return array.reduce((result, currentItem) => {
+      // 获取当前项的分组属性值
+      const groupKey = key_f(currentItem);
+      // 如果结果对象中没有当前分组，创建一个空数组
+      if (!result[groupKey]) {
+        result[groupKey] = [];
+      }
+      // 将当前项添加到对应分组数组中
+      result[groupKey].push(currentItem);
+      return result;
+    }, {}); // 初始化结果为一个空对象
+  };
+
 
