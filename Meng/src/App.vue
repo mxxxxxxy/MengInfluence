@@ -128,7 +128,7 @@ export default{
                             .attr("transform",`translate(0, ${this.upperHeight})`)
             const root = this.assign_position(meng_root);
             const cell = meng_container.selectAll('g')
-                            .data(root.find_node_and_get_first_descendants(root))
+                            .data(root.descendants())
                             .join("g")
                             .attr("transform", d => `translate(${d.x0},${d.y0})`)
             this.addMengTexts = (cell) =>{
@@ -136,8 +136,8 @@ export default{
                         .filter( d=> d.depth == this.meng_depth)
                         .text(d => d.data.name ? d.data.name : "")
                         .classed("vertcal_text_meng",true)
-                        .attr("x", d => "0.45rem")
-                        .attr("y", d =>0)
+                        .attr("x", "0.45rem")
+                        .attr("y", 0)
                         .attr("cursor", "default");
             }
 
@@ -150,68 +150,73 @@ export default{
                 .attr("stroke", "black")
                 .attr("stroke-width", "0px")
                 .attr("opacity", d=>{
+                    console.log(d.depth, this.meng_depth)
                     if(d.depth == this.meng_depth) return "1"
                     else if(d.depth == this.meng_depth + 1) return "0.2"
-                    else return "0"
+                    else return "0";
                 })
                 .attr('cursor', 'pointer')
                 .on("click", this.mengChange);
             cell.call(this.addMengTexts);
         },
+        // mengChange(event, current_meng){
+        //     let focus = meng_root;
+        //     console.log(meng_root)
+        //     this.remove_sankey()
+        //     const meng_container = d3.select(".meng")
+        //     if(current_meng.data.is_leaf){
+        //         return
+        //     }
+        //     this.meng_depth = focus === current_meng ? (current_meng.depth - 1 > 0 ? current_meng.depth - 1 : 0) : current_meng.depth + 1;
+        //     focus = focus === current_meng ? current_meng = current_meng.parent : current_meng;
+        //     // console.log(current_meng)
+        //     const new_root = this.assign_position(current_meng);
+        //     const new_d = new_root.children ? [new_root, ...new_root.children] : [new_root];
+        //     console.log(new_d);
+        //     meng_container.selectAll("g").remove();
+
+        //     const cell = meng_container.selectAll("g").data(new_d)
+        //             .join("g")
+        //             .attr("transform", d => `translate(${d.x0},${d.y0})`);
+
+        //     cell.append("rect")
+        //         .attr("class", d=>`m${d.depth}`)
+        //         .attr("width", d => d.x1 - d.x0)
+        //         .attr("height", d => d.y1 - d.y0)
+        //         .attr("name", d=>d.data.name)
+        //         .attr("fill", (d, i)=>{
+        //             return i == 0 ? "none": this.$color[d.find_parent_by_level(1).data.name]
+        //         })
+        //         .attr("stroke", "black")
+        //         .attr("stroke-width", "0px")
+        //         .attr("opacity", d=>{
+        //             if(d.depth == this.meng_depth) return "1"
+        //             else if(d.depth == this.meng_depth + 1) return "0.2"
+        //             else return "0"
+        //         })
+        //         .attr('cursor', 'pointer')
+        //         .on("mouseenter", (_e, d) => {
+        //             d3.select(_e.target).attr("stroke", "red");
+        //             if(d.depth === 0){
+        //                 return null;
+        //             }
+        //             const all_cited_nodes = h_books.map(b=>b.get_cited_nodes_by_depth(this.cite_depth, d.depth, d.data.name)).flat();
+        //             const all_names = all_cited_nodes.map(d=> concatName(d))
+        //             this.selectedNodes = d3.selectAll(`.l${this.cite_depth}`).filter( d => all_names.includes(concatName(d))).attr("fill", "red");
+        //         })
+        //         .on("mouseleave", (_e, d) => {
+        //             d3.select(_e.target).attr("stroke", "black")
+        //             if(d.depth === 0) return null;
+        //             this.selectedNodes.attr("fill", "none");
+        //             this.selectedNodes = [];
+        //         })
+        //         .on("click", this.mengChange)
+        //     cell.call(this.addMengTexts);
+        //     this.init_sankey();
+        // },
         mengChange(event, current_meng){
-            let focus = meng_root;
-            console.log(meng_root)
-            this.remove_sankey()
-            const meng_container = d3.select(".meng")
-            if(current_meng.data.is_leaf){
-                return
-            }
-            this.meng_depth = focus === current_meng ? (current_meng.depth - 1 > 0 ? current_meng.depth - 1 : 0) : current_meng.depth + 1;
-            focus = focus === current_meng ? current_meng = current_meng.parent : current_meng;
-            // console.log(current_meng)
-            const new_root = this.assign_position(current_meng);
-            const new_d = new_root.children ? [new_root, ...new_root.children] : [new_root];
-            console.log(new_d);
-            meng_container.selectAll("g").remove();
-
-            const cell = meng_container.selectAll("g").data(new_d)
-                    .join("g")
-                    .attr("transform", d => `translate(${d.x0},${d.y0})`);
-
-            cell.append("rect")
-                .attr("class", d=>`m${d.depth}`)
-                .attr("width", d => d.x1 - d.x0)
-                .attr("height", d => d.y1 - d.y0)
-                .attr("name", d=>d.data.name)
-                .attr("fill", (d, i)=>{
-                    return i == 0 ? "none": this.$color[d.find_parent_by_level(1).data.name]
-                })
-                .attr("stroke", "black")
-                .attr("stroke-width", "0px")
-                .attr("opacity", d=>{
-                    if(d.depth == this.meng_depth) return "1"
-                    else if(d.depth == this.meng_depth + 1) return "0.2"
-                    else return "0"
-                })
-                .attr('cursor', 'pointer')
-                .on("mouseenter", (_e, d) => {
-                    d3.select(_e.target).attr("stroke", "red");
-                    if(d.depth === 0){
-                        return null;
-                    }
-                    const all_cited_nodes = h_books.map(b=>b.get_cited_nodes_by_depth(this.cite_depth, d.depth, d.data.name)).flat();
-                    const all_names = all_cited_nodes.map(d=> concatName(d))
-                    this.selectedNodes = d3.selectAll(`.l${this.cite_depth}`).filter( d => all_names.includes(concatName(d))).attr("fill", "red");
-                })
-                .on("mouseleave", (_e, d) => {
-                    d3.select(_e.target).attr("stroke", "black")
-                    if(d.depth === 0) return null;
-                    this.selectedNodes.attr("fill", "none");
-                    this.selectedNodes = [];
-                })
-                .on("click", this.mengChange)
-            cell.call(this.addMengTexts);
-            this.init_sankey();
+            const childrens = current_meng.children.map(d=>d.data.name);
+            console.log(event, current_meng)
         },
         lengthCal(v){
             const nodes_arr = h_books.map(node => node.get_nodes_by_depth(this.cite_depth));
@@ -243,7 +248,6 @@ export default{
                                 .selectAll("g")
                                 .data(node => {
                                     const assign_position = packedSquare()
-                                                    .set_depth(1)
                                                     .size([this.lengthCal(node.value), 30]) // [width, height]
                                                     .padding(2);
                                     const root = assign_position(node);
