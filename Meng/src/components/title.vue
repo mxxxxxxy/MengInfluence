@@ -1,10 +1,8 @@
 <template>
     <svg id="title" width="100%" height="100%">
-        <rect
-            @click="$emit('level-selected', option)"
-        ></rect>
     </svg>
 </template>
+
 
 <script>
 import * as d3 from 'd3';
@@ -17,12 +15,21 @@ export default{
             books: book_data.map(book => {
                 // console.log(tree(book).data.writing_year);
                 return tree(book);
-            })
+            }),
+            totalWidth: 0,
+            totalHeight: 0,
+            bottomHeightRatio: 0.1,
         }
     },
+    computed:{
+        bottomHeight(){
+            return this.totalHeight * this.bottomHeightRatio;
+        },
+        upperHeight(){
+            return this.totalHeight * (1 - this.bottomHeightRatio);
+        },
+    },
     methods:{
-        
-
     },
     mounted(){
         const svg = d3.select("#title");
@@ -32,6 +39,13 @@ export default{
         const title = "梦溪笔谈知识流传可视化";
         const characters = title.split('');
         const lineHeight = height * 0.035;  // 行高，根据容器的高度计算
+
+        const levelMap= {
+                '书': 0,
+                '类': 1,
+                '卷': 2,
+                '条': 3
+            }
 
         // 添加第一个框
         svg.append("rect")
@@ -65,7 +79,7 @@ export default{
         });
 
         // 定义按钮的选项
-        const options = ["类", "卷", "条"];
+        const options = ["书", "类", "卷", "条"];
         // 对每组按钮进行处理
         // for (let i = 0; i < 3; i++) {
             // 对每个选项进行处理
@@ -81,7 +95,7 @@ export default{
                     .style("stroke", "black")  
                     .style("stroke-width", 0.1)
                     .on("click", () => {
-                        this.$emit('level-selected', option);
+                        this.$emit('level-selected', levelMap[option]);
                     });
                 svg.append("text")
                     .attr("x", width * 0.2 + width * 0.2)  // 文本的 x 坐标，设置为一个固定的值
@@ -92,7 +106,7 @@ export default{
                     .style("fill", "black")
                     .text(option)
                     .on("click", () => {
-                        this.$emit('level-selected', option);
+                        this.$emit('level-selected', levelMap[option]);
                     });
             });
         // }
