@@ -11,6 +11,31 @@
         <div style="width: 4%; height: 100%;">
             <Title />
         </div>
+        <Transition name="fade">
+            <div ref="overlay" 
+                id="overlay"
+                v-if="show_image"
+                style="position: absolute; width: 100vw; height: 100vh; background-color: rgb(0,0,0,0.4);  display: flex; align-items: center;">
+                <div style="position: absolute; top: 4%; right: 4%;">
+                    <img :src="close_svg" alt="" style="width: 50px; cursor: pointer;" @click="show_image = false">
+                </div>
+                <div style="flex: 1; display: flex; justify-content: center; flex-direction: column; align-items: center;">
+                    <div style="color: antiquewhite; font-size: xx-large; position: absolute; top: 20%;">
+                        《{{ cite_book_name }}》引文原文
+                    </div>
+                    <!-- <img src="http://localhost:5173/src/assets/item_image/4.png" alt="no exist" style="width: 80%;"> -->
+                    <img :src="leftSrc" alt="no exist" style="width: 80%;">
+                </div>
+                <div style="width: 2px; background-color: black; height: 80%;"></div>
+                <div style="flex: 1; display: flex; justify-content: center; flex-direction: column; align-items: center;">
+                    <div style="color: antiquewhite; font-size: xx-large; position: absolute; top: 20%;">
+                        《梦溪笔谈》引文原文
+                    </div>
+                    <img src="http://localhost:5173/src/assets/item_image/5.png" alt="no exist" style="width: 80%;">
+                    <!-- <img :src="rightSrc" alt="no exist"> -->
+                </div>
+            </div>
+        </Transition>
     </div>
 </template>
 
@@ -21,15 +46,15 @@ import book_data from '@/assets/cited_tree.json';
 import meng_data from '@/assets/meng_full.json';
 import packedSquare from "@/js/packedSquare"
 import tree from "@/js/tree"
-import { getRandomNumber, concatName, count, curve_generator, groupBy } from '@/js/utils'
+import { calRelBoundingBox, concatName, count, curve_generator, groupBy, getItemImageUrl, angleWithNegativeXAxis } from '@/js/utils'
 import Timeline from '@/components/timeline.vue';
 import transition from '@/js/transition.js'
 import { mapActions, mapState, mapWritableState } from 'pinia'
 import { useGlobalStore } from "@/stores/global.js"
-
+import closeSvg from "@/assets/close.svg"
 import Title from './components/title.vue';
 
-var h_books = book_data.map(book => tree(book)).sort((a, b) => b.writing_year - a.writing_year);
+var h_books = book_data.sort((a, b) => b.writing_year - a.writing_year).map(book => tree(book))
 export var meng_root = tree(meng_data);
 
 export default{
@@ -40,11 +65,13 @@ export default{
             bottomHeightRatio: 0.1,
             book_height: 0,
             padding: 2,
-            // cite_depth: 1,
-            // meng_depth: 1,
             selectedNodes: [],
             showNextLevel: true,
-            // loc_model: 1,
+            rightSrc: "",
+            leftSrc: "",
+            cite_book_name: "",
+            close_svg: closeSvg,
+            show_image: false,
         }
     },
     components:{
@@ -105,8 +132,18 @@ export default{
                         .attr("x", "0.45rem")
                         .attr("y", 0)
                         .attr("cursor", "default")
-                        .classed("hide_text" ,d=> d.depth != this.meng_depth)
+                        .classed("hide_text", d=> d.depth != this.meng_depth)
                         .classed("vertcal_text_meng",true);
+                    
+                    // cell.append("text")
+                    //     .text("上一级")
+                    //     .attr("class", d => `back_${d.data.name}`)
+                    //     .attr("x", 0)
+                    //     .attr("y", -5)
+                    //     .attr("font-size", "12")
+                    //     .attr("cursor", "default")
+                    //     // .classed("hide_text", d => d.depth <= this.meng_depth || d.depth === 3);
+                    //     .classed("hide_text", d => d.depth != this.meng_depth);
             }
             cell.append("rect")
                 .attr("class", d=>`m${d.depth}`)
@@ -123,7 +160,7 @@ export default{
                 .classed("no_available", d => d.depth != this.meng_depth)
                 .classed("active", d => d.depth == this.meng_depth)
                 .attr('cursor', 'pointer')
-                .on("click", this.mengChange);
+                .on("dblclick", this.mengChange);
             cell.call(this.addMengTexts);
         },
         // mengChange(event, current_meng){
@@ -182,6 +219,7 @@ export default{
         //     this.init_sankey();
         // },
         mengChange(event, current_meng){
+            current_meng.retain = false;
             const show_meng_level = current_meng.depth + 1;
             const father = d3.select(event.target.parentNode);
             const childrens_name = current_meng.children.map(d=>d.data.name);
@@ -196,7 +234,8 @@ export default{
                 .classed("active", false)
                 .transition(750)
                 .attr("opacity", 0);
-            father.select("text").classed("hide_text", true);
+            father.selectAll("text").classed("hide_text", true);
+            // father.select(`back_${concatName(current_meng)}`).classed("hide_text", true);
             
             if(show_meng_level !== 3){
                 setTimeout(()=>{
@@ -207,7 +246,7 @@ export default{
                     })
                 }, 400)
             }
-            console.log(d3.selectAll(".active"))
+            // console.log(d3.selectAll(".active"))
             this.init_sankey();
         },
         lengthCal(v){
@@ -243,8 +282,6 @@ export default{
                 "": (this.totalWidth - this.padding*7) / 7 * 6,
             };
             const typeCounts = {};
-            // console.log(meng_root.get_nodes_by_depth(2).map(d=>d.data.name))
-            // console.log(meng_root.get_nodes_by_depth(2))
             const citeBooksContainer = svg.selectAll(".line_container")
                                 .data(h_books)
                                 .join('g')
@@ -257,8 +294,6 @@ export default{
                                 .data(book => book.get_nodes_by_depth(this.cite_depth))
                                 .join("g")
                                 .attr("name", d=>d.data.name)
-                                // .attr("transform", (d, i, arr) => `translate(${this.totalWidth / arr.length * i}, 0)`)
-                                // .attr("transform", (d, i, arr) => `translate(${(this.totalWidth-this.padding*7) / arr.length * i}, 0)`)
                                 .attr("transform", (d, i, arr) => {
                                     if(this.loc_model == 2){
                                         console.log('test:', this.loc_model)
@@ -309,6 +344,7 @@ export default{
                     .text(d => d.data.name ? d.data.name : "空")
                     .attr("y", 0)
                     .attr("x", -4)
+                    .attr("pointer-events", "none")
                     .classed("vertcal_text_upper",true)
                     .classed("hide_text",true)
 
@@ -387,16 +423,17 @@ export default{
                 const upper_rects = d3.select(event.target.parentNode).selectAll(".mask");
                 let curves = []
                 for(let lr of lower_rects){
-                    let lower_name = d3.select(lr).data()[0].data.name;
-                    // let lower_l1_name = d3.select(lr).data()[0].find_parent_by_level(1).data.name;
-                    // lower_l1_name = lower_l1_name ? lower_l1_name : "null";
+                    const node_data = d3.select(lr).data()[0];
+                    let lower_name = node_data.data.name;
                     let upper_rect = upper_rects.filter(function(){
                         let _ = d3.select(this).attr("class").replace(" mask", "");
+                        if(_ == "null") _ = "";
                         return _ == lower_name;
                     }).node()
                     curves.push({
                         d: curve_generator(this.main_svg.node(), upper_rect, lr),
-                        color: this.$color[lower_name]
+                        color: this.$color[lower_name],
+                        meng_depth: node_data.depth,
                     })
                 }
                 this.draw_sankey(d.data.name, curves)        
@@ -412,10 +449,36 @@ export default{
                     const parent = d3.select(nodes[i].parentNode);
                     const all_citation = d.count_cited_nodes_by_cite_depth(h_books, this.cite_depth);
                     const cited_num = count(all_citation);
+                    const meng_dom = calRelBoundingBox(this.main_svg.node(), nodes[i])
+                    const meng_center = [meng_dom.x, meng_dom.y + meng_dom.height / 2]
                     // console.log(cited_num, d.depth)
+                    // const all_cited_key = new Set(Object.keys(cited_num));
+                    // 排序 d.get_cited_doms_by_m_node(h_books, this.cite_depth)获取所有引用该meng节点的书 
+                    let position_dict = {}
+                    d.get_cited_doms_by_m_node(h_books, this.cite_depth)
+                    .each( (_d, i, nodes) => {
+                        const selected_node = d3.select(nodes[i].parentNode).select(`.${d.data.name ? d.data.name : "null"}`);
+                        let _bbox = calRelBoundingBox(this.main_svg.node(), selected_node.node());
+                        let _c = [_bbox.x, _bbox.y + _bbox.height]
+                        position_dict[concatName(_d)] = _c
+                    })
+                    const sorted_key = Object.keys(position_dict)
+                    .sort((a, b) => {
+                        let _a = position_dict[a]
+                        let _b = position_dict[b]
+                        return angleWithNegativeXAxis(meng_center, _b) - angleWithNegativeXAxis(meng_center, _a)
+                        // if(_a.x !== _b.x) {
+                        //     console.log(_a.x, _b.x)
+                        //     return _a.x - _b.x
+                        // }
+                        // else if(_a.x == _b.x){
+                        //     return _a.y - _b.y;
+                        // }
+                    })
                     let _start = 0;
                     d.cite_rect = {}
-                    for(let [key, value] of Object.entries(cited_num)){ //tt
+                    for(let key of sorted_key){
+                        const value = cited_num[key];
                         d.cite_rect[key] = {
                             x: _start, y:0, w: value / all_citation.length  * bbox.width, h: bbox.height, num: value
                         }
@@ -431,7 +494,8 @@ export default{
                             .attr("pointer-events", "none")
                     }
             })
-            meng_rect.on("mouseover",(event,d)=>{
+            meng_rect.on("mouseover click",(event,d)=>{
+                    if(event.type === "click") d.retain = !d.retain;
                     let curves = []
                     d.get_cited_doms_by_m_node(h_books, this.cite_depth)
                     .each((_d, i, nodes) => {
@@ -442,19 +506,25 @@ export default{
                             .filter(meng_node=>meng_node.data.name == d.data.name)
                             .node();
                         d3.select(nodes[i].parentNode).select("text").classed("hide_text", false);
+                        if(d.depth === 3){
+                            var img_url = getItemImageUrl(d.data.value[0].name.replace("n", ""));
+                        }
                         curves.push({
                             d: curve_generator(this.main_svg.node(),selected_node.node(), meng_node),
-                            color: this.$color[d.find_parent_by_level(1).data.name]
+                            color: this.$color[d.find_parent_by_level(1).data.name],
+                            meng_depth: d.depth,
+                            book: _d.find_parent_by_level(0).data.name,
+                            url: img_url,
                         })
                     })
                     this.draw_sankey(d.data.name, curves)
-                
             })
             .on("mouseout", (e, d) => {
                     d3.select("#canvas").selectAll("text").classed("hide_text", true);
                     d3.selectAll(".hl").classed("hl", false);
-                    this.remove_sankey(d.data.name)
+                    if(!d.retain) this.remove_sankey(d.data.name)
             })
+
         },
         draw_sankey(sankey_name, curves){
             this.main_svg.selectAll(`.sankey${sankey_name}`)
@@ -465,6 +535,23 @@ export default{
                         .classed("sankey", true)
                         .attr("fill", _d => _d.color)
                         .attr("opacity", 0.3)
+                        .attr("cursor",  d => d.meng_depth !== 3 ? "default" : "pointer")
+                        .on("mouseover", (e, d) => {
+                            if(d.meng_depth !== 3) return
+                            d3.select(e.target).attr("stroke", "red").attr("stroke-width", "2")
+                        })
+                        .on("mouseout", (e, d) => {
+                            if(d.meng_depth !== 3) return
+                            d3.select(e.target).attr("stroke", null).attr("stroke-width", "0")
+                        })
+                        .on("click", (event, d) => {
+                            if(3 !== d.meng_depth){
+                                return
+                            }
+                            this.show_image = true;
+                            this.cite_book_name = d.book;
+                            this.leftSrc = d.url;
+                        })
         },
         remove_sankey(sankey_name){
             if(!sankey_name){
@@ -515,9 +602,10 @@ export default{
 <style>
 #main{
     width: 100%; 
-    height: 99%; 
+    height: 100%; 
     overflow: scroll; 
     display:flex; 
+    position: relative;
 }
 
 .node_container{

@@ -46,6 +46,21 @@ export function calRelBoundingBox(container, inner){
     }
 }
 
+export function getItemImageUrl(name){
+    return new URL('../assets/item_image/' + name + '.png', import.meta.url).href;
+}
+
+export function hasImg(pathImg){
+    var ImgObj = new Image();
+    ImgObj.src = pathImg;
+    console.log(ImgObj)
+     if(ImgObj.fileSize > 0 || (ImgObj.width > 0 && ImgObj.height > 0))
+     {
+       return true;
+     } else {
+       return false;
+    }
+}
 
 export function curve_generator(main_svg, upper_rect, lower_rect){
     const link = d3.linkVertical();
@@ -71,5 +86,23 @@ export function groupBy(array, key_f) {
       return result;
     }, {}); // 初始化结果为一个空对象
   };
+
+
+  export function angleWithNegativeXAxis(start ,end) { //start end
+    // 计算向量 AB 的坐标
+    const [x1, y1] = start;
+    const [x2, y2] = end;
+    let dx = x1 - x2;
+    let dy = y1 - y2;
+    // 计算向量 AB 与 x 轴正方向的夹角 θ
+    let theta = Math.atan2(dy, dx);
+    
+    // 计算与 x 负半轴的夹角
+    let angleWithNegativeXAxis = Math.abs(Math.PI - theta);
+    // console.log(theta)
+    return angleWithNegativeXAxis; // 如果需要弧度则返回 angleWithNegativeXAxis
+}
+
+
 
 
