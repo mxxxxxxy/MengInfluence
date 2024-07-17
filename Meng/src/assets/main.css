@@ -3,7 +3,7 @@
 #app {
     width: 100vw;
     margin: 0;
-    padding: 1rem;
+    /* padding: 1rem; */
     font-weight: normal;
     height: 100vh;
     /* background-image: url("./background.png"); */
@@ -20,4 +20,5 @@
     background-repeat: no-repeat;  /* 不重复 */
     font-family: 'FangSong', sans-serif; 
     background-color: #F7F7F7;
+    /* background-color: #000; */
   }

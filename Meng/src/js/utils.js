@@ -1,9 +1,27 @@
 import * as d3 from 'd3'
 
+
+Math.seed = 5;
 export function getRandomNumber(min, max) {
-    return Math.random() * (max - min) + min;
+    // return Math.random() * (max - min) + min;
+    max = max || 1;
+    min = min || 0;
+ 
+    Math.seed = (Math.seed * 9301 + 49297) % 233280;
+    var rnd = Math.seed / 233280.0;
+ 
+    return Math.ceil( min + rnd * (max - min) );   // Math.ceil实现取整功能，可以根据需要取消取整
 }
 
+// function(max, min) {
+//     max = max || 1;
+//     min = min || 0;
+ 
+//     Math.seed = (Math.seed * 9301 + 49297) % 233280;
+//     var rnd = Math.seed / 233280.0;
+ 
+//     return Math.ceil( min + rnd * (max - min) );   // Math.ceil实现取整功能，可以根据需要取消取整
+//  };
 export function concatName(tree_data){
     let name = tree_data.data.name;
     let current_node = tree_data;
@@ -46,6 +64,21 @@ export function calRelBoundingBox(container, inner){
     }
 }
 
+export function getItemImageUrl(name){
+    return new URL('../assets/item_image/' + name + '.png', import.meta.url).href;
+}
+
+export function hasImg(pathImg){
+    var ImgObj = new Image();
+    ImgObj.src = pathImg;
+    console.log(ImgObj)
+     if(ImgObj.fileSize > 0 || (ImgObj.width > 0 && ImgObj.height > 0))
+     {
+       return true;
+     } else {
+       return false;
+    }
+}
 
 export function curve_generator(main_svg, upper_rect, lower_rect){
     const link = d3.linkVertical();
@@ -71,5 +104,23 @@ export function groupBy(array, key_f) {
       return result;
     }, {}); // 初始化结果为一个空对象
   };
+
+
+  export function angleWithNegativeXAxis(start ,end) { //start end
+    // 计算向量 AB 的坐标
+    const [x1, y1] = start;
+    const [x2, y2] = end;
+    let dx = x1 - x2;
+    let dy = y1 - y2;
+    // 计算向量 AB 与 x 轴正方向的夹角 θ
+    let theta = Math.atan2(dy, dx);
+    
+    // 计算与 x 负半轴的夹角
+    let angleWithNegativeXAxis = Math.abs(Math.PI - theta);
+    // console.log(theta)
+    return angleWithNegativeXAxis; // 如果需要弧度则返回 angleWithNegativeXAxis
+}
+
+
 
 

@@ -8,12 +8,14 @@
 import * as d3 from 'd3';
 import book_data from '@/assets/cited_tree.json';
 import tree from "@/js/tree";
+import { mapActions, mapState, mapWritableState } from 'pinia'
+import { useGlobalStore } from "@/stores/global.js"
 
 export default{
-    props: ['citeDepth', 'mengDepth', 'locModel'],
+    // props: ['cite_depth', 'meng_depth', 'loc_model'],
     watch: {
-        citeDepth(newDepth, oldDepth) {
-            // 当 citeDepth 改变时，重新渲染按钮
+        cite_depth(newDepth, oldDepth) {
+            // 当 cite_depth 改变时，重新渲染按钮
             this.renderButtons();
         }
     },
@@ -29,6 +31,7 @@ export default{
         }
     },
     computed:{
+        ...mapState(useGlobalStore, ['cite_depth', 'meng_depth', 'loc_model']),
         bottomHeight(){
             return this.totalHeight * this.bottomHeightRatio;
         },
@@ -37,6 +40,7 @@ export default{
         },
     },
     methods:{
+        ...mapActions(useGlobalStore, ['update_cite_depth', 'update_loc_model', 'update_meng_depth']),
         renderButtons() {
             d3.selectAll("text.titlebutton").remove();
             const svg = d3.select("#title");
@@ -108,11 +112,14 @@ export default{
                         .attr("height", height * 0.02) 
                         // .style("fill", "#D33E3E")
                         // .style("fill", "#F7F7F7")
-                        .style("fill", levelMap[option] === this.citeDepth ? "#D33E3E" : "#F7F7F7")  // 如果当前的深度等于 citeDepth，那么填充颜色为红色，否则为灰色
+                        .style("fill", levelMap[option] === this.cite_depth ? "#D33E3E" : "#F7F7F7")  // 如果当前的深度等于 citeDepth，那么填充颜色为红色，否则为灰色
                         .style("stroke", "black")  
-                        .style("stroke-width", levelMap[option] === this.citeDepth ? 0 : 0.1)
+                        .style("stroke-width", levelMap[option] === this.cite_depth ? 0 : 0.1)
+                        .style("cursor", "pointer")
                         .on("click", () => {
-                            this.$emit('level-selected', levelMap[option]);
+                            this.update_cite_depth(levelMap[option]);
+                            // this.$emit('level-selected', levelMap[option]);
+                            
                         });
                     svg.append("text")
                         .attr("x", width * 0.2 + width * 0.12)  // 文本的 x 坐标，设置为一个固定的值
@@ -120,11 +127,9 @@ export default{
                         .attr("text-anchor", "middle")
                         .style("font-size", width * 0.2)
                         .style("font-family", "FangSong") 
-                        .style("fill", levelMap[option] === this.citeDepth ? "#ffffff" : "#A5A5A5")
+                        .style("fill", levelMap[option] === this.cite_depth ? "#ffffff" : "#A5A5A5")
+                        .attr("pointer-events","none")
                         .text(option)
-                        .on("click", () => {
-                            this.$emit('level-selected', levelMap[option]);
-                        });
                 });
             // }
 
@@ -137,11 +142,13 @@ export default{
                     .attr("width", height * 0.02)
                     .attr("height", height * 0.02) 
                     // .style("fill", "#D33E3E")
-                    .style("fill", levelMap[option] === this.mengDepth ? "#D33E3E" : "#F7F7F7")
+                    .style("fill", levelMap[option] === this.meng_depth ? "#D33E3E" : "#F7F7F7")
                     .style("stroke", "black")  
-                    .style("stroke-width", levelMap[option] === this.mengDepth ? 0 : 0.1)
+                    .style("stroke-width", levelMap[option] === this.meng_depth ? 0 : 0.1)
+                    .style("cursor","pointer")
                     .on("click", () => {
-                        this.$emit('level-selected-meng', option);
+                        // this.$emit('level-selected-meng', option);
+                        this.update_meng_depth(levelMap[option]);
                     });
 
                 svg.append("text")
@@ -150,11 +157,9 @@ export default{
                     .attr("text-anchor", "middle")
                     .style("font-size", width * 0.2)
                     .style("font-family", "FangSong") 
-                    .style("fill", levelMap[option] === this.mengDepth ? "#ffffff" : "#A5A5A5")
+                    .style("fill", levelMap[option] === this.meng_depth ? "#ffffff" : "#A5A5A5")
+                    .attr("pointer-events","none")
                     .text(option)
-                    .on("click", () => {
-                        this.$emit('level-selected-meng', option);
-                    });
             });
 
             const options3 = ["级", "题"];
@@ -165,11 +170,13 @@ export default{
                     .attr("y", characters.length * lineHeight + height * 0.4 + j * 30)  // 选项的 y 坐标，根据选项的索引计算
                     .attr("width", height * 0.02)
                     .attr("height", height * 0.02) 
-                    .style("fill", modelMap[option] === this.locModel ? "#D33E3E" : "#F7F7F7")
+                    .style("fill", modelMap[option] === this.loc_model ? "#D33E3E" : "#F7F7F7")
                     .style("stroke", "black")
-                    .style("stroke-width", modelMap[option] === this.locModel ? 0 : 0.1)
+                    .style("stroke-width", modelMap[option] === this.loc_model ? 0 : 0.1)
+                    .style("cursor","pointer")
                     .on("click", () => {
-                        this.$emit('loc-model', modelMap[option]);
+                        this.update_loc_model(modelMap[option]);
+                        // this.$emit('loc-model', modelMap[option]);
                     });
 
                 svg.append("text")
@@ -178,11 +185,10 @@ export default{
                     .attr("text-anchor", "middle")
                     .style("font-size", width * 0.2)
                     .style("font-family", "FangSong") 
-                    .style("fill", modelMap[option] === this.locModel ? "#ffffff" : "#A5A5A5")
+                    .style("fill", modelMap[option] === this.loc_model ? "#ffffff" : "#A5A5A5")
+                    .attr("pointer-events","none")
                     .text(option)
-                    .on("click", () => {
-                        this.$emit('loc-model', modelMap[option]);
-                    });
+
             });
 
 
