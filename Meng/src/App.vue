@@ -46,7 +46,7 @@ import book_data from '@/assets/cited_tree.json';
 import meng_data from '@/assets/meng_full.json';
 import packedSquare from "@/js/packedSquare"
 import tree from "@/js/tree"
-import { calRelBoundingBox, concatName, count, curve_generator, groupBy, getItemImageUrl, angleWithNegativeXAxis } from '@/js/utils'
+import { calRelBoundingBox, concatName, count, curve_generator, groupBy, getItemImageUrl, angleWithNegativeXAxis, getRandomNumber } from '@/js/utils'
 import Timeline from '@/components/timeline.vue';
 import transition from '@/js/transition.js'
 import { mapActions, mapState, mapWritableState } from 'pinia'
@@ -64,7 +64,7 @@ export default{
             totalHeight: 0,
             bottomHeightRatio: 0.1,
             book_height: 0,
-            padding: 2,
+            padding: 30,
             selectedNodes: [],
             showNextLevel: true,
             rightSrc: "",
@@ -126,24 +126,43 @@ export default{
                             .join("g")
                             .attr("class", d => `mg${d.depth}`)
                             .attr("transform", d => `translate(${d.x0},${d.y0})`)
+
             this.addMengTexts = (cell) =>{
-                    cell.append("text")
+
+                    const text_group = cell
+                        .append("g")
+                        .attr("class","info_text")
+                        .attr("transfrom",`translate(0.45rem, 0)`)
+                        .classed("hide_text", d=> d.depth != this.meng_depth);
+
+                    const first_text = text_group.append("text")
                         .text(d => d.data.name ? d.data.name : "")
                         .attr("x", "0.45rem")
                         .attr("y", 0)
                         .attr("cursor", "default")
-                        .classed("hide_text", d=> d.depth != this.meng_depth)
+                        .attr("pointer-events", "none")
                         .classed("vertcal_text_meng",true);
+
+                    const former_height = first_text.nodes().map(n => n.getBBox().height);
+
+                    text_group.append("text")
+                        .text(d => d.value)
+                        .attr("x", "")
+                        .attr("y", (d, i) =>`${former_height[i] + 13}`)
+                        .attr("cursor", "default")
+                        .attr("pointer-events", "none")
+
                     
-                    // cell.append("text")
-                    //     .text("上一级")
-                    //     .attr("class", d => `back_${d.data.name}`)
-                    //     .attr("x", 0)
-                    //     .attr("y", -5)
-                    //     .attr("font-size", "12")
-                    //     .attr("cursor", "default")
-                    //     // .classed("hide_text", d => d.depth <= this.meng_depth || d.depth === 3);
-                    //     .classed("hide_text", d => d.depth != this.meng_depth);
+                    text_group.append("text")
+                        .text("上")
+                        .attr("class", d => `${d.data.name}`)
+                        .attr("x", 0)
+                        .attr("y", -5)
+                        .attr("font-size", "12")
+                        .attr("cursor", "default")
+                        // .classed("hide_text", d => d.depth <= this.meng_depth || d.depth === 3);
+                        .classed("hide_text", d => {
+                            return d.depth <= this.meng_depth});
             }
             cell.append("rect")
                 .attr("class", d=>`m${d.depth}`)
@@ -241,12 +260,11 @@ export default{
                 setTimeout(()=>{
                     children.each((d,i,nodes) => {
                         d3.select(nodes[i].parentNode)
-                        .select("text")
+                        .select(".info_text")
                         .classed("hide_text", false);
                     })
                 }, 400)
             }
-            // console.log(d3.selectAll(".active"))
             this.init_sankey();
         },
         lengthCal(v){
@@ -287,7 +305,7 @@ export default{
                                 .join('g')
                                 .attr('class', book => `${book.data.name}`)
                                 .attr("transform", (node, i, arr) => {
-                                    return `translate(${this.padding*7}, ${this.upperHeight*0.9 / arr.length * i})`})
+                                    return `translate(${this.padding}, ${this.upperHeight * 0.9 / arr.length * i})`})
 
             this.addNodes = (citeBooksContainer) => citeBooksContainer.selectAll('g')
                                 .attr("class", "node_container")
@@ -296,9 +314,9 @@ export default{
                                 .attr("name", d=>d.data.name)
                                 .attr("transform", (d, i, arr) => {
                                     if(this.loc_model == 2){
-                                        console.log('test:', this.loc_model)
                                         let x;
                                         if(d.depth == 0){
+                                            console.log(d.data)
                                             x = typeToX[arr[0].__data__.data.type];
                                             return `translate(${x}, 0)`;
                                         }
@@ -325,8 +343,9 @@ export default{
                                         }
                                     }
                                     else{
-                                        console.log('test:', this.loc_model)
-                                        return `translate(${(this.totalWidth-this.padding*7) / arr.length * i}, 0)`;
+                                        const random_start = getRandomNumber(this.padding, 500)
+                                        console.log('test:', arr.length)
+                                        return `translate(${(this.totalWidth-this.padding - random_start) / arr.length * i + random_start}, 0)`;
                                     }
                                 })
                                 .selectAll("g")
@@ -416,7 +435,8 @@ export default{
                 }
             })
             all_cited_rect.on("mouseover", (event, d) => {
-                d3.select(event.target.parentNode).select("text").classed("hide_text", false).raise();
+                const g = d3.select(event.target.parentNode).select("text").classed("hide_text", false).raise();
+                d3.select(`.${d.find_parent_by_level(0).data.name}`).raise()
                 const lower_rects = meng_g
                                     .selectAll(`.${concatName(d)}`)
                                     .classed("hl", true).raise();
@@ -451,8 +471,7 @@ export default{
                     const cited_num = count(all_citation);
                     const meng_dom = calRelBoundingBox(this.main_svg.node(), nodes[i])
                     const meng_center = [meng_dom.x, meng_dom.y + meng_dom.height / 2]
-                    // console.log(cited_num, d.depth)
-                    // const all_cited_key = new Set(Object.keys(cited_num));
+
                     // 排序 d.get_cited_doms_by_m_node(h_books, this.cite_depth)获取所有引用该meng节点的书 
                     let position_dict = {}
                     d.get_cited_doms_by_m_node(h_books, this.cite_depth)
@@ -501,6 +520,7 @@ export default{
                     .each((_d, i, nodes) => {
                         const selected_node = d3.select(nodes[i].parentNode).select(`.${d.data.name ? d.data.name : "null"}`)
                         .classed("hl",true).raise();
+                        d3.select(`.${_d.find_parent_by_level(0).data.name}`).raise()
                         const meng_node = d3.select(".meng")
                             .selectAll(`.${concatName(_d)}`)
                             .filter(meng_node=>meng_node.data.name == d.data.name)
@@ -538,7 +558,7 @@ export default{
                         .attr("cursor",  d => d.meng_depth !== 3 ? "default" : "pointer")
                         .on("mouseover", (e, d) => {
                             if(d.meng_depth !== 3) return
-                            d3.select(e.target).attr("stroke", "red").attr("stroke-width", "2")
+                            // d3.select(e.target).attr("stroke", "red").attr("stroke-width", "2")
                         })
                         .on("mouseout", (e, d) => {
                             if(d.meng_depth !== 3) return

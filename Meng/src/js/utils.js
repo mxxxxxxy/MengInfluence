@@ -1,9 +1,27 @@
 import * as d3 from 'd3'
 
+
+Math.seed = 5;
 export function getRandomNumber(min, max) {
-    return Math.random() * (max - min) + min;
+    // return Math.random() * (max - min) + min;
+    max = max || 1;
+    min = min || 0;
+ 
+    Math.seed = (Math.seed * 9301 + 49297) % 233280;
+    var rnd = Math.seed / 233280.0;
+ 
+    return Math.ceil( min + rnd * (max - min) );   // Math.ceil实现取整功能，可以根据需要取消取整
 }
 
+// function(max, min) {
+//     max = max || 1;
+//     min = min || 0;
+ 
+//     Math.seed = (Math.seed * 9301 + 49297) % 233280;
+//     var rnd = Math.seed / 233280.0;
+ 
+//     return Math.ceil( min + rnd * (max - min) );   // Math.ceil实现取整功能，可以根据需要取消取整
+//  };
 export function concatName(tree_data){
     let name = tree_data.data.name;
     let current_node = tree_data;
