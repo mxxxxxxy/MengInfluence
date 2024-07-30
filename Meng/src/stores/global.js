@@ -7,6 +7,7 @@ export const useGlobalStore = defineStore('global', {
             cite_depth: 1,
             meng_depth: 1,
             loc_model: 1,
+            selected_book: {},
         }
     },
     actions: {
@@ -18,6 +19,9 @@ export const useGlobalStore = defineStore('global', {
         },
         update_loc_model(v){
             this.loc_model = v;
+        },
+        update_selected_book(v){
+            this.selected_book = v;
         },
     }
 })

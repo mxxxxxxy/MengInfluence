@@ -8,6 +8,8 @@
 import * as d3 from 'd3';
 import book_data from '@/assets/cited_tree.json';
 import tree from "@/js/tree";
+import { mapActions, mapState, mapWritableState } from 'pinia'
+import { useGlobalStore } from "@/stores/global.js"
 
 export default{
     data() {
@@ -22,6 +24,7 @@ export default{
         }
     },
     computed:{
+        ...mapWritableState(useGlobalStore, ['selected_book']),
         bottomHeight(){
             return this.totalHeight * this.bottomHeightRatio;
         },
@@ -134,7 +137,7 @@ export default{
                 const level3Items = book.descendants().filter(node => node.data.level === 3);  // 找到所有三级条目
                 const rectWidth = width*0.2;  // 将所有 image 的宽度设置为等大小
 
-                let imagePath = new URL('../assets/images/' + book.data.name + '.png', import.meta.url).href;  // 生成图片路径
+                let imagePath = new URL('../assets/small_images/' + book.data.name + '.png', import.meta.url).href;  // 生成图片路径
 
                 let image = svg.append("image")  // 在循环内部为 image 变量赋值
                     .attr("x", padding_w)  // 使用与 rect 相同的 x 值
@@ -145,6 +148,7 @@ export default{
                     .attr("class", book.data.name.replace(/\s+/g, '-'))
                     .attr("opacity", 0)
                     .on("mouseover", (event, d) => {
+                        this.selected_book = book;
                         this.$emit('book-hover', book.data.name);
                         // 放大当前的图片
                         image.attr("width", rectWidth * 3)
@@ -165,6 +169,7 @@ export default{
                     })
                     .on("mouseout", (event, d) => {
                         // 恢复当前的图片
+                        this.selected_book = null;
                         image.attr("width", rectWidth)
                             .attr("height", yScale.bandwidth())
                             .attr("opacity", 0);
@@ -213,7 +218,7 @@ export default{
             });
 
 
-            let imagePath = new URL('../assets/images/' + '梦溪笔谈' + '.png', import.meta.url).href;  // 生成图片路径
+            let imagePath = new URL('../assets/small_images/' + '梦溪笔谈' + '.png', import.meta.url).href;  // 生成图片路径
 
             let image_meng = svg.append("image")  // 在循环内部为 image 变量赋值
                 .attr("x", padding_w - 4)  // 使用与 rect 相同的 x 值

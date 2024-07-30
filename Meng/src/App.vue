@@ -15,23 +15,30 @@
             <div ref="overlay" 
                 id="overlay"
                 v-if="show_image"
-                style="position: absolute; width: 100vw; height: 100vh; background-color: rgb(0,0,0,0.4);  display: flex; align-items: center;">
+                style="position: absolute; width: 100vw; height: 100vh; background-color: rgb(0,0,0,0.4);  display: flex; align-items: center;" @click="show_image = false">
                 <div style="position: absolute; top: 4%; right: 4%;">
                     <img :src="close_svg" alt="" style="width: 50px; cursor: pointer;" @click="show_image = false">
                 </div>
                 <div style="flex: 1; display: flex; justify-content: center; flex-direction: column; align-items: center;">
-                    <div style="color: antiquewhite; font-size: xx-large; position: absolute; top: 20%;">
-                        《{{ cite_book_name }}》引文原文
+                    <div style="color: antiquewhite; position: absolute; top: 10%; display: flex; flex-direction: column; width: 40%;">
+                        <div style="font-size: xx-large;">
+                            《{{ cite_book_name }}》引文与原图
+                        </div>
+                        <div style="font-size: large;">
+                            {{ text }}
+                        </div>
                     </div>
-                    <!-- <img src="http://localhost:5173/src/assets/item_image/4.png" alt="no exist" style="width: 80%;"> -->
                     <img :src="leftSrc" alt="no exist" style="width: 80%;">
                 </div>
-                <div style="width: 2px; background-color: black; height: 80%;"></div>
+                <div style="width: 2px; background-color: antiquewhite; height: 80%;"></div>
                 <div style="flex: 1; display: flex; justify-content: center; flex-direction: column; align-items: center;">
                     <div style="color: antiquewhite; font-size: xx-large; position: absolute; top: 20%;">
-                        《梦溪笔谈》引文原文
+                        《 梦溪笔谈 》原图
                     </div>
-                    <img src="http://localhost:5173/src/assets/item_image/5.png" alt="no exist" style="width: 80%;">
+                    <div style="color: antiquewhite; font-size: large; position: absolute; top: 30%; width: 40%;">
+                        <!-- {{ text }} -->
+                    </div>
+                    <!-- <img src="http://localhost:5173/src/assets/item_image/5.png" alt="no exist" style="width: 80%;"> -->
                     <!-- <img :src="rightSrc" alt="no exist"> -->
                 </div>
             </div>
@@ -72,6 +79,7 @@ export default{
             cite_book_name: "",
             close_svg: closeSvg,
             show_image: false,
+            text: ""
         }
     },
     components:{
@@ -79,7 +87,7 @@ export default{
         Title: Title
     },
     computed:{
-        ...mapState(useGlobalStore, ['cite_depth', 'meng_depth', 'loc_model']),
+        ...mapState(useGlobalStore, ['cite_depth', 'meng_depth', 'loc_model', 'selected_book']),
         bottomHeight(){
             return this.totalHeight * this.bottomHeightRatio;
         },
@@ -153,16 +161,16 @@ export default{
                         .attr("pointer-events", "none")
 
                     
-                    text_group.append("text")
-                        .text("上")
-                        .attr("class", d => `${d.data.name}`)
-                        .attr("x", 0)
-                        .attr("y", -5)
-                        .attr("font-size", "12")
-                        .attr("cursor", "default")
-                        // .classed("hide_text", d => d.depth <= this.meng_depth || d.depth === 3);
-                        .classed("hide_text", d => {
-                            return d.depth <= this.meng_depth});
+                    // text_group.append("text")
+                    //     .text("上")
+                    //     .attr("class", d => `${d.data.name}`)
+                    //     .attr("x", 0)
+                    //     .attr("y", -5)
+                    //     .attr("font-size", "12")
+                    //     .attr("cursor", "default")
+                    //     // .classed("hide_text", d => d.depth <= this.meng_depth || d.depth === 3);
+                    //     .classed("hide_text", d => {
+                    //         return d.depth <= this.meng_depth});
             }
             cell.append("rect")
                 .attr("class", d=>`m${d.depth}`)
@@ -279,6 +287,10 @@ export default{
                 min_length /= 3
                 max_length /= 3
             }
+            if(this.cite_depth === 0){
+                min_length /= 1
+                max_length -= 100
+            }
             return d3.scaleLinear().domain(value_range).range([min_length, max_length])(v);
         },
         initUpper(){
@@ -343,8 +355,15 @@ export default{
                                         }
                                     }
                                     else{
-                                        const random_start = getRandomNumber(this.padding, 500)
-                                        console.log('test:', arr.length)
+                                        // let random_start = getRandomNumber(this.padding, 500)
+                                        let random_start =0
+                                        if(arr.length == 1){
+                                            random_start = getRandomNumber(this.padding, this.totalWidth - this.padding - this.lengthCal(d.value))
+                                        }
+                                        // this.lengthCal(d.value)
+                                        // console.log('how many',d.value, this.lengthCal(d.value))
+                                        // console.log('test:', arr.length)
+                                        if(d.data.name === "新雕皇朝类苑") random_start = 0
                                         return `translate(${(this.totalWidth-this.padding - random_start) / arr.length * i + random_start}, 0)`;
                                     }
                                 })
@@ -370,6 +389,7 @@ export default{
             }
             this.openDetail = (event, d) => {
                 console.log("openDetail")
+                this.show_image = true;
             }
             this.addRect = (upperCell) => {
                 return upperCell.append("rect")
@@ -384,7 +404,16 @@ export default{
                     })
                     .attr("pointer-events", d => d.depth === this.cite_depth ? null : "none")
                     .style("cursor", "pointer")
-                    .on("click", this.openDetail)
+                    .on("click", (e, d) => {
+                        if(d.depth === 3){
+                            const v = d.data.children[0].value[0];
+                            const i = v.name.replace('n','')
+                            this.text = v.text;
+                            this.cite_book_name = d.find_parent_by_level(0).data.name;
+                            this.leftSrc = getItemImageUrl(i);
+                            this.openDetail()
+                        }
+                    })
             }
 
             const upperCell = this.addNodes(citeBooksContainer);
@@ -393,7 +422,7 @@ export default{
             return [citeBooksContainer, upperCell, upperRect, upperText]
         },
         init_sankey(){
-            this.canvas.selectAll(".mask").remove();
+            this.main_svg.selectAll(".mask").remove();
             let meng_g = []
             const meng_rect = d3.select(".meng").selectAll(".active").each((d,i,nodes)=>meng_g.push(nodes[i].parentNode));
             const all_cited_rect = d3.selectAll(`.l${this.cite_depth}`);
@@ -439,6 +468,7 @@ export default{
                 d3.select(`.${d.find_parent_by_level(0).data.name}`).raise()
                 const lower_rects = meng_g
                                     .selectAll(`.${concatName(d)}`)
+                                    // .selectAll(".active")
                                     .classed("hl", true).raise();
                 const upper_rects = d3.select(event.target.parentNode).selectAll(".mask");
                 let curves = []
@@ -465,6 +495,7 @@ export default{
             })
 
             meng_rect.each((d,i,nodes) => {
+                    // d3.selectAll()
                     const bbox = nodes[i].getBBox();
                     const parent = d3.select(nodes[i].parentNode);
                     const all_citation = d.count_cited_nodes_by_cite_depth(h_books, this.cite_depth);
@@ -511,9 +542,10 @@ export default{
                             .attr("fill", "none")
                             .attr("class", key)
                             .attr("pointer-events", "none")
+                            .classed("mask", true)
                     }
             })
-            meng_rect.on("mouseover click",(event,d)=>{
+            meng_rect.on("mouseover click", (event,d)=>{
                     if(event.type === "click") d.retain = !d.retain;
                     let curves = []
                     d.get_cited_doms_by_m_node(h_books, this.cite_depth)
@@ -529,12 +561,14 @@ export default{
                         if(d.depth === 3){
                             var img_url = getItemImageUrl(d.data.value[0].name.replace("n", ""));
                         }
+                        // console.log(d)
                         curves.push({
                             d: curve_generator(this.main_svg.node(),selected_node.node(), meng_node),
                             color: this.$color[d.find_parent_by_level(1).data.name],
                             meng_depth: d.depth,
                             book: _d.find_parent_by_level(0).data.name,
                             url: img_url,
+                            text: d.data.value ? d.data.value[0].text : ""
                         })
                     })
                     this.draw_sankey(d.data.name, curves)
@@ -571,12 +605,14 @@ export default{
                             this.show_image = true;
                             this.cite_book_name = d.book;
                             this.leftSrc = d.url;
+                            this.text = d.text;
                         })
         },
         remove_sankey(sankey_name){
             if(!sankey_name){
                 this.main_svg.selectAll(".sankey").remove();
                 this.main_svg.selectAll(".hl").classed("hl", false);
+                this.canvas.selectAll("text").classed("hide_text", true);
                 return 
             }
             this.main_svg.selectAll(`.sankey${sankey_name}`).remove();
@@ -601,8 +637,43 @@ export default{
                 // .style("display", d=> d.depth == this.cite_depth || this.showNextLevel ? null : "none");
                 // .style("display", d=> d.depth == this.cite_depth || this.showNextLevel ? null : "none");
         },
-        meng_depth(){
-
+        selected_book(v){
+            if(!v){
+                this.remove_sankey();
+                return
+            };
+            let meng_g = []
+            const meng_rect = d3.select(".meng").selectAll(".active").each((d,i,nodes)=>meng_g.push(nodes[i].parentNode));
+            meng_g = d3.selectAll(meng_g)
+            const children = v.get_nodes_by_depth(this.cite_depth);
+            d3.select(`.${v.data.name}`)
+                .selectAll(`.l${this.cite_depth}`)
+                .each((d, i, nodes) => {
+                    d.retain = false;
+                    const g = d3.select(nodes[i].parentNode).select("text").classed("hide_text", false).raise();
+                    d3.select(`.${d.find_parent_by_level(0).data.name}`).raise()
+                    const lower_rects = meng_g
+                                        .selectAll(`.${concatName(d)}`)
+                                        // .selectAll(".active")
+                                        .classed("hl", true).raise();
+                    const upper_rects = d3.select(nodes[i].parentNode).selectAll(".mask");
+                    let curves = []
+                    for(let lr of lower_rects){
+                        const node_data = d3.select(lr).data()[0];
+                        let lower_name = node_data.data.name;
+                        let upper_rect = upper_rects.filter(function(){
+                            let _ = d3.select(this).attr("class").replace(" mask", "");
+                            if(_ == "null") _ = "";
+                            return _ == lower_name;
+                        }).node()
+                        curves.push({
+                            d: curve_generator(this.main_svg.node(), upper_rect, lr),
+                            color: this.$color[lower_name],
+                            meng_depth: node_data.depth,
+                        })
+                    }
+                    this.draw_sankey(d.data.name, curves)     
+                })
         }
     },
     mounted(){
